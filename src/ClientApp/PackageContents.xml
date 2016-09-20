@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ApplicationPackage
+    SchemaVersion="1.0"
+    Version="1.0"
+    ProductCode=""
+    HelpFile=""
+    Name="MyCustomPackage"
+    Description="Design Custom Package"
+    Author="George Varghese" >
+
+    <CompanyDetails
+        Name="Autodesk, Inc"
+        Phone="415.555.5555"
+        Url="www.autodesk.com"
+        Email="george.varghese@autodesk.com" />
+
+    <Components>
+        <RuntimeRequirements 
+            OS="Win64" 
+            Platform="AutoCAD" />
+        
+        <ComponentEntry
+            AppName="MyCustomPackage"
+            ModuleName="./Contents/RxApp.dll"
+            AppDescription="AutoCAD.IO .net test app"
+            LoadOnCommandInvocation="True"
+            LoadOnAutoCADStartup="False"
+            >
+            <Commands GroupName="MyTestCommands">
+                <Command Global="TEST" Local="TEST" />
+            </Commands>
+          <AssemblyMappings>
+            <AssemblyMapping Name="MyCustomPackage.Newtonsoft.Json" Path="./Contents/Newtonsoft.Json.dll" />
+          </AssemblyMappings>
+        </ComponentEntry>
+    </Components>
+</ApplicationPackage>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Acquiring File Information</title>
+    <style type="text/css">
+        #alert {
+            color: red;
+            margin: 1em 0;
+        }
+    </style>
+    <script type="text/javascript">
+        var resultlocation;
+        var customdatalocation;
+        var activityname;
+        window.addEventListener('load', init, false);
+        function init() {
+            checkForFileApiSupport();
+            document.getElementById('file3d').addEventListener('change', handleFileSelection3d, false);
+            document.getElementById('file2d').addEventListener('change', handleFileSelection2d, false);
+        }
+
+        function checkForFileApiSupport() {
+            if (window.File && window.FileReader && window.FileList && window.Blob) {
+                // All the File APIs are supported.
+            }
+            else {
+                document.getElementById('alert').innerHTML = "The File APIs are not fully supported in this browser.";
+            }
+        }
+
+        function handleFileSelection3d(evt) {
+            var file = evt.target.files[0];
+            submitWorkItem("MyPublishActivity3d", file);
+        }
+
+        function handleFileSelection2d(evt) {
+            var file = evt.target.files[0];
+            submitWorkItem("MyPublishActivity2d", file);
+        }
+
+        function submitWorkItem(name, file) {
+
+            var reader = new FileReader();
+            reader.onload = (function (theFile) {
+                return function (e) {
+                    var data = new Int8Array(e.target.result);
+                    invokeWorkItem(data, file.name);
+                    activityname = name;
+                };
+            })(file);
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function sendRequest(url, httpmethod, contenttype, payload, callback)
+        {
+            var xhr = new XMLHttpRequest();
+            xhr.open(httpmethod, url, true);
+            if (contenttype)
+                xhr.setRequestHeader("Content-Type", contenttype);
+            xhr.onload = function (e) {
+                if (this.status == 200) {
+                    callback(true, this.responseText);
+                } else {
+                    callback(false);
+                }
+            }
+
+            xhr.onerror = function () {
+                callback(false);
+            };
+
+            xhr.send(payload);
+        }
+
+        function uploadFile(filename, data, callback) {
+            
+            var url = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/uploadlocation?dwgname=" + encodeURIComponent(filename);
+            sendRequest(url, "GET", "application/json", null, function (status, response) {
+                if (status) {
+                    var result = JSON.parse(response);
+                    var location = result.Result;
+                    sendRequest(location, "PUT", null, data, function (status) {
+                        if (status) {
+                            callback(true, location);
+                        } else {
+                            callback(false);
+                        }
+                    });
+                } else {
+                    callback(false);
+                }
+            });
+        }
+
+        function invokeWorkItem(data, filename) {
+
+            displayMessage("Uploading...");
+            uploadFile(filename, data, function (status, location) {
+                if (status) {
+                    var payload = {
+                        "dwglocation": location,
+                        "activityname": activityname
+                    }
+
+                    displayMessage("Processing...");
+                    var acturl = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/customactivity";
+                    sendRequest(acturl, "POST", "application/json", JSON.stringify(payload), function (status, response) {
+                        if (status) {
+                            var resp = JSON.parse(response);
+                            if (resp && resp.Result) {
+                                resultlocation = resp.Result;
+                                customdatalocation = resp.CustomData;
+                                if (resultlocation) {
+                                    document.getElementById("viewerbutton").disabled = false;
+                                    displayMessage("Click on the viewer button to launch the viewer");
+                                }
+                            } else {
+                                displayMessage("Error processing the file");
+                            }
+                        } else {
+                            displayMessage("Error processing the file");
+                        }
+                    });
+                } else {
+                    displayMessage("Error uploading the drawing file");
+                }
+            });
+        }
+
+        function displayMessage(message)
+        {
+            document.getElementById("alert").innerHTML = "<br/>" + message;
+        }
+
+        function viewerButtonClicked()
+        {
+            if (!resultlocation)
+                return;
+            var type = "2d";
+            if (activityname === "MyPublishActivity3d")
+                type = "3d";
+            var query = "result=" + encodeURIComponent(resultlocation) + "&data=" + encodeURIComponent(customdatalocation) + "&type=" + type;
+            var url = "./viewer.html?" + query;
+            window.open(url, "_blank", width=400,height=400);
+        }
+
+    </script>
+</head>
+
+<body>
+    <div>
+        <br />
+        <br />
+        Upload 3D drawings
+    </div>
+    <div>
+        <input type="file" id="file3d" name="file" accept=".dwg, Drawing"/>
+        <br />
+        <br />
+    </div>
+    <div>
+        <br />
+        <br />
+        Upload 2D drawings
+    </div>
+    <div>
+        <input type="file" id="file2d" name="file" accept=".dwg, Drawing" />
+        <br />
+        <br />
+    </div>
+    <div>
+        <br/>
+        <br />
+        <button type="button" id="viewerbutton" onclick="viewerButtonClicked()" disabled>Viewer</button>
+    </div>
+    <div id="alert"></div>
+</body>
+</html>
