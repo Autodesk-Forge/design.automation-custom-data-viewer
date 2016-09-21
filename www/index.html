@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <title>Acquiring File Information</title>
@@ -116,7 +116,17 @@
                                     displayMessage("Click on the viewer button to launch the viewer");
                                 }
                             } else {
-                                displayMessage("Error processing the file");
+                                var errorReport = "Error processing the file";
+                                if (resp && resp.errorMessage) {
+                                    errorReport += "<br/>";
+                                    errorReport += "<br/>";
+                                    errorReport += "<a href=";
+                                    errorReport += resp.errorMessage;
+                                    errorReport += ">";
+                                    errorReport += "Error Report";
+                                    errorReport += "</a>";
+                                }
+                                displayMessage(errorReport);
                             }
                         } else {
                             displayMessage("Error processing the file");

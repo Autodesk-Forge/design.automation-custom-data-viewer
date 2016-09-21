@@ -31,6 +31,15 @@
             }
         }
 
+        var propertylocation 
+        if (viewertype == "2d") {
+            // The source folder is in a subfolder for F2D.
+            propertylocation = svflocation.substring(0, svflocation.lastIndexOf("/"));
+            propertylocation = propertylocation.substring(0, propertylocation.lastIndexOf("/")) + "/";
+        } else {
+            // The source folder is in the root
+            propertylocation = svflocation.substring(0, svflocation.lastIndexOf("/")) + "/";
+        }
 
         var xdatainfo = {};
         sendRequest(customdatalocation, "GET", null, null, function (status, response) {
@@ -43,21 +52,17 @@
             }
         });
 
-
+        
+        
         var viewerDocument = svflocation;
         var myViewerDiv = document.getElementById('MyViewerDiv');
-        var viewer;
-        if (viewertype === "2d") {
-            viewer = new Autodesk.Viewing.Private.GuiViewer3D(myViewerDiv,
-             { extensions: ['Autodesk.DASample.Viewing.Extension.DisplayXData'] });
-        } else {
-            viewer = new Autodesk.Viewing.Private.GuiViewer3D(myViewerDiv,
-             { extensions: ['Autodesk.DASample.Viewing.Extension.DisplayXData'] });
-        }
+        var viewer = new Autodesk.Viewing.Private.GuiViewer3D(myViewerDiv,
+         { extensions: ['Autodesk.DASample.Viewing.Extension.DisplayXData'] });
 
         var options = {
             'env' : 'Local',
-            'document': viewerDocument
+            'document': viewerDocument,
+            'sharedPropertyDbPath': propertylocation
         };
         Autodesk.Viewing.Initializer(options, function() {
             viewer.start(options.document, options, function () {

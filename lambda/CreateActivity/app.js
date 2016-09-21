@@ -64,7 +64,10 @@ function handleEvent(event, context, callback) {
                 callback(null, param);
             } else {
                 context.callbackWaitsForEmptyEventLoop = false;
-                callback("Could not process the request", "Error message");
+                var errormsg = "Could not process the request";
+                if (resultlocation)
+                    errormsg = resultlocation;
+                callback(errormsg, "Error message");
             }
         });
 
@@ -86,7 +89,7 @@ function start(token, dwgLocation, activityname, script, folderName, callback) {
                             callback(true, resultlocation, xdatalocation);
                         } else {
                             console.log("Error: submitting the workitem");
-                            callback(false);
+                            callback(false, resultlocation);
                         }
                     });
 
@@ -389,7 +392,13 @@ function submitWorkItem(url, token, activityname, resource, folderName, callback
                     });
 
                 } else {
-                    callback(false);
+                    var report;
+                    if (param) {
+                        var resultObj = JSON.parse(param);
+                        if (resultObj && resultObj.Status && resultObj.StatusDetails && resultObj.StatusDetails.Report)
+                            report = resultObj.StatusDetails.Report;
+                    }
+                    callback(false, report);
                 }
             });
         } else {
