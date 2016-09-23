@@ -20,7 +20,7 @@ function handleEvent(event, context, callback) {
         return;
     }
 
-    var folderName = "Test/" + uuid.v4() + "/";
+    var folderName = "files/" + uuid.v4() + "/";
     
     uploadWorkItemResult(url, folderName, function (status, resultlocation, xdatalocation) {
         if (status) {
