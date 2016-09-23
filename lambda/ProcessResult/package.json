@@ -1,0 +1,16 @@
+{
+  "name": "ProcessResultJS",
+  "version": "0.0.0",
+  "description": "ProcessResultJS",
+  "main": "app.js",
+  "author": {
+    "name": "George Varghese",
+    "email": "george.varghese@autodesk.com"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.6.4",
+    "request": "^2.75.0",
+    "unzip": "^0.1.11",
+    "uuid": "^2.0.3"
+  }
+}

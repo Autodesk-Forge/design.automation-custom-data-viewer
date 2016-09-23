@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Acquiring File Information</title>
@@ -104,36 +104,94 @@
                     }
 
                     displayMessage("Processing...");
-                    var acturl = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/customactivity";
+                    var acturl = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/submitworkitem";
                     sendRequest(acturl, "POST", "application/json", JSON.stringify(payload), function (status, response) {
                         if (status) {
                             var resp = JSON.parse(response);
                             if (resp && resp.Result) {
-                                resultlocation = resp.Result;
-                                customdatalocation = resp.CustomData;
-                                if (resultlocation) {
-                                    document.getElementById("viewerbutton").disabled = false;
-                                    displayMessage("Click on the viewer button to launch the viewer");
-                                }
+                                var workitemId = resp.Result;
+                                getWorkItemStatus(workitemId, function (status, workitemResult) {
+                                    if (status) {
+                                        processResult(workitemResult.Result);
+                                    } else {
+                                        var errorReport = "Error processing the workitem";
+                                        if (workitemResult && workitemResult.Result) {
+                                            errorReport += "<br/>";
+                                            errorReport += "<br/>";
+                                            errorReport += "<a href=";
+                                            errorReport += workitemResult.Result;
+                                            errorReport += ">";
+                                            errorReport += "Error Report";
+                                            errorReport += "</a>";
+                                        }
+                                        displayMessage(errorReport);
+                                    }
+                                });                                
                             } else {
-                                var errorReport = "Error processing the file";
-                                if (resp && resp.errorMessage) {
-                                    errorReport += "<br/>";
-                                    errorReport += "<br/>";
-                                    errorReport += "<a href=";
-                                    errorReport += resp.errorMessage;
-                                    errorReport += ">";
-                                    errorReport += "Error Report";
-                                    errorReport += "</a>";
-                                }
-                                displayMessage(errorReport);
+                                displayMessage("Error submitting the workitem");
                             }
                         } else {
-                            displayMessage("Error processing the file");
+                            displayMessage("Error submitting the workitem");
                         }
                     });
                 } else {
                     displayMessage("Error uploading the drawing file");
+                }
+            });
+        }
+
+        var asyncLoop = function (o) {
+            var loop = function () {
+                o.functionToInvoke(loop);
+            }
+            loop();
+        }
+
+        function getWorkItemStatus(workitemId, callback) {
+            var url = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/workitemstatus?" + "workitemid=" + encodeURIComponent(workitemId);
+
+            asyncLoop({
+                functionToInvoke: function (loop) {
+                    setTimeout(function () {
+                        sendRequest(url, "GET", "application/json", null, function (status, response) {
+                            var result = JSON.parse(response);
+                            if (status) {
+                                if (result && result.StatusText === "Pending") {
+                                    loop();
+                                } else if (result && result.StatusText === "Succeeded") {
+                                    callback(true, result);
+                                }
+                                else {
+                                    callback(false, result);
+                                }
+                            } else {
+                                callback(false, result);
+                            }
+                        });
+                    }, 2000);
+                }
+            });
+        }
+
+        function processResult(outputUrl) {
+            var payload = {
+                "output": outputUrl
+            }
+
+            var url = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/processresult";
+            sendRequest(url, "POST", "application/json", JSON.stringify(payload), function (status, response) {
+                if (status) {
+                    var resp = JSON.parse(response);
+                    if (resp && resp.Result) {
+                        resultlocation = resp.Result;
+                        customdatalocation = resp.CustomData;
+                        if (resultlocation) {
+                            document.getElementById("viewerbutton").disabled = false;
+                            displayMessage("Click on the viewer button to launch the viewer");
+                        }
+                    }
+                } else {
+                    displayMessage("Error processing the result");
                 }
             });
         }
