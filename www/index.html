@@ -96,6 +96,7 @@
         function invokeWorkItem(data, filename) {
 
             displayMessage("Uploading...");
+            displayReport(null);
             uploadFile(filename, data, function (status, location) {
                 if (status) {
                     var payload = {
@@ -112,17 +113,12 @@
                                 var workitemId = resp.Result;
                                 getWorkItemStatus(workitemId, function (status, workitemResult) {
                                     if (status) {
-                                        processResult(workitemResult.Result);
+                                        processResult(workitemResult.Result.Output);
+                                        displayReport(workitemResult.Result.Report);
                                     } else {
-                                        var errorReport = "Error processing the workitem";
-                                        if (workitemResult && workitemResult.Result) {
-                                            errorReport += "<br/>";
-                                            errorReport += "<br/>";
-                                            errorReport += "<a href=";
-                                            errorReport += workitemResult.Result;
-                                            errorReport += ">";
-                                            errorReport += "Error Report";
-                                            errorReport += "</a>";
+                                        displayMessage("Error processing the workitem");
+                                        if (workitemResult && workitemResult.Result.Report) {
+                                            displayReport(workitemResult.Result.Report);
                                         }
                                         displayMessage(errorReport);
                                     }
@@ -138,6 +134,18 @@
                     displayMessage("Error uploading the drawing file");
                 }
             });
+        }
+
+        function displayReport(report) {
+            var msg = "";
+            if (report) {
+                msg += "<a href=";
+                msg += report;
+                msg += ">";
+                msg += "View report";
+                msg += "</a>";
+            }
+            document.getElementById("report").innerHTML = "<br/>" + msg;
         }
 
         var asyncLoop = function (o) {
@@ -198,7 +206,7 @@
 
         function displayMessage(message)
         {
-            document.getElementById("alert").innerHTML = "<br/>" + message;
+            document.getElementById("alert").innerHTML = message;
         }
 
         function viewerButtonClicked()
@@ -243,5 +251,6 @@
         <button type="button" id="viewerbutton" onclick="viewerButtonClicked()" disabled>Viewer</button>
     </div>
     <div id="alert"></div>
+    <div id="report"></div>
 </body>
 </html>

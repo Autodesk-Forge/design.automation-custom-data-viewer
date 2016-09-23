@@ -52,10 +52,10 @@ function getWorkItemStatus(url, token, callback) {
                         next();
                         ++count;
                     } else if (result.Status == "Succeeded") {
-                        next({ Status: true, StatusText: "Succeeded", Result: result.Arguments.OutputArguments[0].Resource });
+                        next({ Status: true, StatusText: "Succeeded", Result: { Output: result.Arguments.OutputArguments[0].Resource, Report : result.StatusDetails.Report } });
                     }
                     else {
-                        next({ Status: true, StatusText: "Failed", Result: result.StatusDetails.Report });
+                        next({ Status: true, StatusText: "Failed", Result: { Report : result.StatusDetails.Report } });
                     }
                 }
                 else {
