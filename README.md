@@ -4,7 +4,7 @@ The sample code shows the usage of DesignAutomation API (https://developer.autod
 The sample app has essentially three parts
 
 ##1. ARX Application
-The ARX application is written in .NET, it has a command called ‘TEST’. The TEST command extracts any XData associated with the entities to a JSON file. The ARX is uploaded as part of a custom package using the DesignAutomation API, and run as part of a custom activity.
+The ARX application is written in .NET, it has a command called â€˜TESTâ€™. The TEST command extracts any XData associated with the entities to a JSON file. The ARX is uploaded as part of a custom package using the DesignAutomation API, and run as part of a custom activity.
 
 
 ##2. AWS Lambdas
@@ -35,6 +35,32 @@ The webpage has JavaScript functionality to invoke the API exposed by the lambda
 5.	Update config.js files with AWS key, secret and the bucket.
 
 ##Workflow:
+
+![Workflow of the sample](http://g.gravizo.com/g?
+@startuml;
+actor "Browser" as ua;
+participant "UploadLocation lambda" as uploader;
+participant "SubmitWorkItem lambda" as submitter;
+participant "WorkitemStatus lambda" as statuschecker;
+participant "ProcessResult lambda" as resultprocessor;
+participant s3;
+participant "Forge Design Automation" as acadio;
+ua -> uploader: Get presigned url upload;
+uploader -> ua: presigned url for S3;
+ua -> s3 : upload dwg file;
+ua -> submitter : request work;
+submitter -> acadio : check apppackage;
+submitter -> acadio : check activitiy;
+submitter -> acadio : post workitem;
+submitter -> ua : work submitted;
+ua -> statuschecker : check workitem status;
+statuschecker -> acadio : get workitem status;
+acadio -> statuschecker : success;
+statuschecker -> ua : success;
+ua -> resultprocessor : process results;
+@enduml
+)
+
 1.	The drawing is selected in the webpage.
 2.	A pre-signed url is obtained from the UploadLocation lambda using the AWS gateway API for uploading the drawing, and it is uploaded.
 3.	The SubmitWorkItem lambda is invoked passing the location of the uploaded drawing.
