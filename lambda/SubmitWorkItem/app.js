@@ -1,7 +1,6 @@
 ﻿
 var AWS = require("aws-sdk");
 var request = require('request');
-var uuid = require('uuid');
 var unzip = require('unzip');
 var async = require('async');
 var fs = require('fs');
@@ -16,6 +15,8 @@ exports.handler = handleEvent;
 
 function handleEvent(event, context, callback) {       
     
+    // Get the activity name from the request
+    //
     var actlength = config.activities.length;
     var activityname;
     var script;
@@ -28,20 +29,28 @@ function handleEvent(event, context, callback) {
     }
     
     if (!activityname) {
-        console.log("Error: Invalid activity name");
+        callback("Error: Invalid activity name", "Error message");
         return;
     }
     
-    
-    var dwgLocation = event.dwglocation;
-    var folderName = "Test/" + uuid.v4() + "/";
-    
-    var key = dwgLocation;
+    if (!event.dwglocation) {
+        callback("Error: Invalid drawing location");
+        return;
+    }
+
+    var key = event.dwglocation;
     var strtoken = "amazonaws.com/";
     key = key.substring(key.indexOf(strtoken) + strtoken.length);
     key = key.substring(0, key.indexOf("?"));
+    if (!key) {
+        callback("Invalid pre-signed url");
+        return;
+    }
+
     key = decodeURIComponent(key);
     
+    // Create a presigned url for GET that needs to be passed to DesignAutomation API
+    //
     var s3 = new AWS.S3({ accessKeyId: config.aws_key, secretAccessKey: config.aws_secret });
     var params = { Bucket: config.aws_s3_bucket, Key: key };
     var url = s3.getSignedUrl('getObject', params);
@@ -54,11 +63,11 @@ function handleEvent(event, context, callback) {
 
     getToken(config.auth_endpoint, config.developer_key, config.developer_secret, function (token) {
         if (!token) {
-            console.log("Error: Failed to obtain the access token");
+            callback("Error: Failed to obtain the access token");
             return;
         }
 
-        start(token, url, activityname, script, folderName, function (ret, workitemId) {
+        start(token, url, activityname, script, function (ret, workitemId) {
             if (ret) {
                 context.callbackWaitsForEmptyEventLoop = false;
                 var param = { Result : workitemId };
@@ -71,15 +80,17 @@ function handleEvent(event, context, callback) {
     });    
 }
 
-
-function start(token, dwgLocation, activityname, script, folderName, callback) {
+// The function creates the app package and the custom activity if not available and then submits the 
+// workitem for the given drawing.
+//
+function start(token, dwgLocation, activityname, script, callback) {
             
     createPackage(token, config.package_name, config.package_endpoint, config.package_source_endpoint, config.package_upload_endpoint, function (ret) {
         if (ret) {
             console.log("Successfully created the app package");
             createActivity(config.activity_endpoint, token, config.package_name, config.refpackage_name, activityname, script, function (ret) {
                 if (ret) {
-                    submitWorkItem(config.workitem_endpoint, token, activityname, dwgLocation, folderName, function (ret, workitemId) {
+                    submitWorkItem(config.workitem_endpoint, token, activityname, dwgLocation, function (ret, workitemId) {
                         if (ret) {
                             console.log("Sucessfully submitted the workitem");
                             callback(true, workitemId);
@@ -102,6 +113,8 @@ function start(token, dwgLocation, activityname, script, folderName, callback) {
 
 }
 
+// Helper function to check if the given app package is available
+//
 function isPackageAvailable(url, token, packagename, callback) {
     var uri = url + "(\'" + packagename + "\')";
     sendAuthData(uri, 'GET', token, null, function (status) {
@@ -112,6 +125,8 @@ function isPackageAvailable(url, token, packagename, callback) {
     });
 }
 
+// Helper function to delete a package, it is not used
+//
 function deletePackage(url, token, packagename, callback) {
     var uri = url + "(\'" + packagename + "\')";
     sendAuthData(uri, 'DELETE', token, null, function (status) {
@@ -122,6 +137,11 @@ function deletePackage(url, token, packagename, callback) {
     });
 }
 
+// Helper function to create an app package, the function does an early return if
+// the package is already available. The function gets the package upload pre-signed 
+// url using the DesignAutomation API. The package is then uploaded from the 
+// source url to the target provided by the API. 
+//
 function createPackage(token, packagename, packageurl, packagesourceurl, packageuploadurl, callback) {
     
     // Check if the package already exists, and if does exist, return.
@@ -174,7 +194,9 @@ function createPackage(token, packagename, packageurl, packagesourceurl, package
     
 }
 
-
+// Helper function that returns the location where the package needs to 
+// be uploaded.
+//
 function getpackageuploadurl(url, token, callback) {
     sendAuthData(url, 'GET', token, null, function (status, body) {
         if (status == 200) {
@@ -187,6 +209,8 @@ function getpackageuploadurl(url, token, callback) {
     });
 }
 
+// This function uploads the package to the target location
+//
 function uploadPackage(packagessourceurl, url, token, callback) {
     getBinaryData(packagessourceurl, function (status, body) {
         if (status == 200) {
@@ -204,7 +228,8 @@ function uploadPackage(packagessourceurl, url, token, callback) {
     });
 }
 
-
+// The function checks if the activity with the given name is available
+//
 function isActivityAvailable(url, token, activityname, callback) {
     var uri = url + "(\'" + activityname + "\')";
     sendAuthData(uri, 'GET', token, null, function (status) {
@@ -215,6 +240,8 @@ function isActivityAvailable(url, token, activityname, callback) {
     });
 }
 
+// Helper function to delete an activity
+//
 function deleteActivity(url, token, activityname, callback) {
     var uri = url + "(\'" + activityname + "\')";
     sendAuthData(uri, 'DELETE', token, null, function (status) {
@@ -225,6 +252,9 @@ function deleteActivity(url, token, activityname, callback) {
     });
 }
 
+// The function creates an activity using the DesignAutomation API if the activity is not available.
+// The package references another package which is added.
+//
 function createActivity(url, token, packagename, refpackagename, activityname, script, callback) {
     
     // Check if the activity already exists, return if it does exist.
@@ -300,8 +330,9 @@ function createActivity(url, token, packagename, refpackagename, activityname, s
 
 }
 
-
-function submitWorkItem(url, token, activityname, resource, folderName, callback) {
+// The functions submits a workitem using the Design Automation API.
+//
+function submitWorkItem(url, token, activityname, resource, callback) {
     var workitembody = {
         "@odata.type": "#ACES.Models.WorkItem",
         "ActivityId": activityname,
@@ -381,7 +412,8 @@ function submitWorkItem(url, token, activityname, resource, folderName, callback
     });
 }
 
-
+// Sends a request with the authorization token
+//
 function sendAuthData(uri, httpmethod, token, data, callback) {
     
     var requestbody = "";
@@ -409,6 +441,8 @@ function sendAuthData(uri, httpmethod, token, data, callback) {
     });
 }
 
+// Sends a normal request
+//
 function sendData(uri, httpmethod, content, callback) {
     request({
         url: uri,
@@ -427,6 +461,8 @@ function sendData(uri, httpmethod, content, callback) {
     });
 }
 
+// Helper function to download binary data
+//
 function getBinaryData(uri, callback) {
     request({
         url: uri,
@@ -445,7 +481,8 @@ function getBinaryData(uri, callback) {
     });
 }
 
-
+// Helper function to get the access token
+//
 function requestToken(authurl, key, secret, callback) {
     request({
         url: authurl,
@@ -482,3 +519,4 @@ function getToken(url, key, secret, callback) {
         callback(token);
     });
 }
+

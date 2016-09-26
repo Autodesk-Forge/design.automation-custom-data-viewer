@@ -16,12 +16,17 @@ function handleEvent(event, context, callback) {
         
     var url = event.output;
     if (!url) {
-        console.log("Error: Invalid url");
+        callback("Error: Invalid url");
         return;
     }
 
     var folderName = "files/" + uuid.v4() + "/";
-    
+   
+    // The function gets the result output by the Design Automation API, 
+    // which is a compressed form. It uncompresses the result, uploads 
+    // the files to a unique location on S3, and returns the location 
+    // of SVF/F2D files, along with the location of the xdata.
+    //
     uploadWorkItemResult(url, folderName, function (status, resultlocation, xdatalocation) {
         if (status) {
             context.callbackWaitsForEmptyEventLoop = false;
@@ -38,7 +43,8 @@ function handleEvent(event, context, callback) {
     }); 
 }
 
-
+// Get the result and process it. 
+// 
 function uploadWorkItemResult(url, folderName, callback) {
     if (!url) {
         callback(false);
@@ -61,6 +67,10 @@ function uploadWorkItemResult(url, folderName, callback) {
     });
 }
 
+// The function uncompresses the data, and upload the result to S3.
+// In the process it also stores the location of SVF/F2D and xdata, 
+// and returns it to the caller.
+//
 function uploadResultToS3(body, folderName, callback) {
     
     var s3 = new AWS.S3({ accessKeyId: config.aws_key, secretAccessKey: config.aws_secret });
@@ -76,7 +86,7 @@ function uploadResultToS3(body, folderName, callback) {
     .on('entry', function (entry) {
         ++count;
         var fileName = entry.path;
-        // Remove any folders and upload them to a single folder, if not the Viewer will balk.
+        
         var index = fileName.indexOf("\\");
         if (index != -1) {
             fileName = fileName.replace("\\", "/");
@@ -114,7 +124,8 @@ function uploadResultToS3(body, folderName, callback) {
     });
 }
 
-
+// Helper function to get the binary data
+//
 function getBinaryData(uri, callback) {
     request({
         url: uri,

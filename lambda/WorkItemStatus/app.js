@@ -9,10 +9,12 @@ var config = require("./config.js");
 exports.handler = handleEvent;
 
 function handleEvent(event, context, callback) {   
-        
+    
+    // Get the workitem id from the request
+    //
     var workitemId = event.workitemid;
     if (!workitemId) {
-        console.log("Error: Invalid workitem id");
+        callback("Error: Invalid workitem id");
         return;
     }
     workitemId = decodeURIComponent(workitemId);    
@@ -36,6 +38,12 @@ function handleEvent(event, context, callback) {
     });
 }
 
+// The function gets the status of the workitem using the DesignAutomation API,
+// loops through to a count of ten if the status is pending with a time interval 
+// of two seconds. The AWS API gateway timesout at 30s, and so it keeps the loop 
+// below thirty seconds after which it returns the pending status to the client.
+// It returns the status immediately on success or failure.
+//
 function getWorkItemStatus(url, token, callback) {
     var count = 0;
     async.forever(function (next) {
@@ -44,7 +52,7 @@ function getWorkItemStatus(url, token, callback) {
                     var result = JSON.parse(body);
                     if (result.Status == "Pending" || result.Status == "InProgress") {
                         if (count > 10) {
-                        // Exit at count 10, we do not want to run over 20s                        
+                            // Exit at count 10, we do not want to run over 20s                        
                             next({ Status: true, StatusText: "Pending" });
                             return;
                         }
@@ -71,6 +79,8 @@ function getWorkItemStatus(url, token, callback) {
         });    
 }
 
+// Helper function to send authenticated request
+//
 function sendAuthData(uri, httpmethod, token, data, callback) {
     
     var requestbody = "";
@@ -98,7 +108,8 @@ function sendAuthData(uri, httpmethod, token, data, callback) {
     });
 }
 
-
+// Helper function to get the access token.
+//
 function requestToken(authurl, key, secret, callback) {
     request({
         url: authurl,
