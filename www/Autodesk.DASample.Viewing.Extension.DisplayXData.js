@@ -1,6 +1,8 @@
-﻿AutodeskNamespace("Autodesk.DASample.Viewing.Extension");
+﻿// The viewer extension to view Xdata associated with the object
+//
+AutodeskNamespace("Autodesk.DASample.Viewing.Extension");
 
-
+// The property panel to view the xdata values
 XDataPanel = function (parentContainer, id, x, y) {
     this.content = document.createElement('div');
     Autodesk.Viewing.UI.PropertyPanel.call(this, parentContainer, id, 'XData');
@@ -68,6 +70,10 @@ Autodesk.DASample.Viewing.Extension.DisplayXData = function (viewer, options) {
         });
     }
 
+    // The function checks if the object that is passed has any xdata that has 
+    // been cached. The object handle is used to check the availability 
+    // in the cache.
+    //
     function displayXData(dbId) {
         if (!xdatainfo)
             return;

@@ -9,13 +9,20 @@
         }
     </style>
     <script type="text/javascript">
+        // Stores the location of the output SVF/F3D file
         var resultlocation;
+        // Stores the location of the xdata file
         var customdatalocation;
+        // Stores the activity name
         var activityname;
+
         window.addEventListener('load', init, false);
+
         function init() {
             checkForFileApiSupport();
+            // Add event handler for choose file 3D button
             document.getElementById('file3d').addEventListener('change', handleFileSelection3d, false);
+            // Add event handler for choose file 2D button
             document.getElementById('file2d').addEventListener('change', handleFileSelection2d, false);
         }
 
@@ -30,11 +37,13 @@
 
         function handleFileSelection3d(evt) {
             var file = evt.target.files[0];
+            // Submit the workitem for the 3D drawing
             submitWorkItem("MyPublishActivity3d", file);
         }
 
         function handleFileSelection2d(evt) {
             var file = evt.target.files[0];
+            // Submit the workitem for the 2D drawing
             submitWorkItem("MyPublishActivity2d", file);
         }
 
@@ -52,8 +61,9 @@
             reader.readAsArrayBuffer(file);
         }
 
-        function sendRequest(url, httpmethod, contenttype, payload, callback)
-        {
+        // Helper function to send the request
+        //
+        function sendRequest(url, httpmethod, contenttype, payload, callback) {
             var xhr = new XMLHttpRequest();
             xhr.open(httpmethod, url, true);
             if (contenttype)
@@ -73,8 +83,13 @@
             xhr.send(payload);
         }
 
+        // This is helper function to upload a file. It gets a pre-signed url for storage, 
+        // and uploads the file. It takes the name of the file, the data to be uploaded and a 
+        // callback function. The callback is called with a value set to true on 
+        // success, and false on failure.
+        //
         function uploadFile(filename, data, callback) {
-            
+
             var url = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/uploadlocation?dwgname=" + encodeURIComponent(filename);
             sendRequest(url, "GET", "application/json", null, function (status, response) {
                 if (status) {
@@ -93,12 +108,22 @@
             });
         }
 
+        // The function uploads the file to the storage, and submits the custom 
+        // workitem. The content is the location of the file, and the activityname
+        // If the workitem is successfully submitted, then the workitem status is 
+        // queried. If the workitem has been successfully processed, it calls 
+        // the function to process the output of the workitem. 
+        // The workitem report is displayed on success or on failure.
+        //
         function invokeWorkItem(data, filename) {
 
             displayMessage("Uploading...");
             displayReport(null);
+
+            // Upload the file
             uploadFile(filename, data, function (status, location) {
                 if (status) {
+                    // Pass the uploaded location and the activityname in the content
                     var payload = {
                         "dwglocation": location,
                         "activityname": activityname
@@ -110,19 +135,23 @@
                         if (status) {
                             var resp = JSON.parse(response);
                             if (resp && resp.Result) {
+                                // Get the workitem status on successfully submitting the workitem.
                                 var workitemId = resp.Result;
                                 getWorkItemStatus(workitemId, function (status, workitemResult) {
                                     if (status) {
+                                        // Process the output from the workitem on success
                                         processResult(workitemResult.Result.Output);
+                                        // Display the workitem report
                                         displayReport(workitemResult.Result.Report);
                                     } else {
+                                        // On error, display the workitem report if available
                                         displayMessage("Error processing the workitem");
                                         if (workitemResult && workitemResult.Result.Report) {
                                             displayReport(workitemResult.Result.Report);
                                         }
                                         displayMessage(errorReport);
                                     }
-                                });                                
+                                });
                             } else {
                                 displayMessage("Error submitting the workitem");
                             }
@@ -136,6 +165,7 @@
             });
         }
 
+        // Helper function to display the report as hyperlink
         function displayReport(report) {
             var msg = "";
             if (report) {
@@ -155,6 +185,9 @@
             loop();
         }
 
+        // The function polls the workitem status, in a while loop, 
+        // the loop breaks on success or error. 
+        //
         function getWorkItemStatus(workitemId, callback) {
             var url = "https://7f95l25y78.execute-api.us-west-2.amazonaws.com/staging/workitemstatus?" + "workitemid=" + encodeURIComponent(workitemId);
 
@@ -165,6 +198,7 @@
                             var result = JSON.parse(response);
                             if (status) {
                                 if (result && result.StatusText === "Pending") {
+                                    // continue if the status is pending
                                     loop();
                                 } else if (result && result.StatusText === "Succeeded") {
                                     callback(true, result);
@@ -181,6 +215,12 @@
             });
         }
 
+        // The function invokes the API to process the output which is a compressed file.
+        // On success, the API returns the location of the SVF/F2D file and the location 
+        // of the xdata extracted by the workitem.
+        // The API takes the output zip file returned by the workitem, uncompresses it 
+        // to a storage location, and returns the location of the files.
+        //
         function processResult(outputUrl) {
             var payload = {
                 "output": outputUrl
@@ -194,6 +234,7 @@
                         resultlocation = resp.Result;
                         customdatalocation = resp.CustomData;
                         if (resultlocation) {
+                            // Enable the viewer button
                             document.getElementById("viewerbutton").disabled = false;
                             displayMessage("Click on the viewer button to launch the viewer");
                         }
@@ -204,13 +245,16 @@
             });
         }
 
-        function displayMessage(message)
-        {
+        // Utility function to display message
+        //
+        function displayMessage(message) {
             document.getElementById("alert").innerHTML = message;
         }
 
-        function viewerButtonClicked()
-        {
+        // The function launches the viewer to display the model. The location 
+        // of SVF/F2D and the xdata is passed as query parameters.
+        //
+        function viewerButtonClicked() {
             if (!resultlocation)
                 return;
             var type = "2d";
@@ -218,7 +262,7 @@
                 type = "3d";
             var query = "result=" + encodeURIComponent(resultlocation) + "&data=" + encodeURIComponent(customdatalocation) + "&type=" + type;
             var url = "./viewer.html?" + query;
-            window.open(url, "_blank", width=400,height=400);
+            window.open(url, "_blank", width = 400, height = 400);
         }
 
     </script>
@@ -231,7 +275,7 @@
         Upload 3D drawings
     </div>
     <div>
-        <input type="file" id="file3d" name="file" accept=".dwg, Drawing"/>
+        <input type="file" id="file3d" name="file" accept=".dwg, Drawing" />
         <br />
         <br />
     </div>
@@ -246,7 +290,7 @@
         <br />
     </div>
     <div>
-        <br/>
+        <br />
         <br />
         <button type="button" id="viewerbutton" onclick="viewerButtonClicked()" disabled>Viewer</button>
     </div>
