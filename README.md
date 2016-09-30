@@ -1,5 +1,37 @@
 # IOViewerSample
-The sample code shows the usage of DesignAutomation API (https://developer.autodesk.com/en/docs/design-automation/v2) and the Viewer API (https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample application (http://viewersample.autocad.io/).
+The sample code shows the combined usage of DesignAutomation API (https://developer.autodesk.com/en/docs/design-automation/v2) and the Viewer API (https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample application (http://viewersample.autocad.io/).
+
+## Pre-requisites
+1. Visual Studio 2015 (https://msdn.microsoft.com/en-us/default.aspx)
+2. Nodejs (https://nodejs.org/en/download/)
+3. Serverless npm package (v1.0 or above), v1.0 is still in beta, and so please run 
+   npm install -g serverless@Beta
+   to install v1.0 of the package. There has been a significant change in v1.0 and the sample is based on v1.0.
+   If you run 'npm install -g serverless' the sample will not run since it is going to install v0.5.*
+4. Amazon Web Service access key and secret (https://aws.amazon.com/).
+5. Autodesk Developer access key and secret (https://developer.autodesk.com/).
+
+
+## Setup
+1. Verify that you have all the pre-requisites.
+2. Open .\src\SampleApp.sln in VisualStudio 2015.
+3. Right click on the solution in the solution explorer, and click restore nuget packages.
+4. Right click on the solution, click Build solution.
+5. Run ClientApp application. This will create .\src\binpackage.zip.
+6. Open .\setup\init.bat and enter the values. All the values are needed to run the sample.
+7. Open command prompt window, change directory to .\setup\
+8. Run setup.bat
+
+## Setup Workflow
+1. The dependencies are downloaded for the various projects
+2. The config.js file is updated with data needed to run the lambdas.
+2. The services is deployed using serverless framework
+   - The lambdas are uploaded and configured.
+   - APIs are created, configured using AWS API gateway to expose the lambdas.
+   - A storage bucket is created and configured for processing dwg file.
+3. A bucket is created for the app package, and package.zip is uploaded to it.
+4. The html file is updated with the endpoints from the API gateway.
+5. A node server is started and the page is loaded from localhost on port 8080.
 
 The sample app has essentially three parts
 
@@ -26,13 +58,6 @@ The function takes the location of the result posted by DesignAutomation API for
 ##3. Client Webpage
 The webpage has JavaScript functionality to invoke the API exposed by the lambdas. The local drawing selected by the user is uploaded using the AWS API gateway, and the workitem referencing the uploaded drawing is submitted. The Viewer API is used to show the resultant SVF/F2D file that was processed. Selecting the object in the Viewer will display any XData associated with the object in a properties panel, implemented using the Viewer API.
 
-
-##Setup:
-1.	Build the Client Application, SampleApp.sln. This will create a package.zip
-2.	Upload package.zip to a location.
-3.	Reference the package.zip location in the config.js file of SubmitWorkItem lambda.
-4.	Update config.js files with the Application API Key and Value.
-5.	Update config.js files with AWS key, secret and the bucket.
 
 ##Workflow:
 
