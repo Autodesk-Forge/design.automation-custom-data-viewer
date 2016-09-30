@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>My Viewer</title>
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/viewingservice/v1/viewers/style.min.css?v=v2.10" type="text/css">
+</head>
+<body>
+    <div id="MyViewerDiv"></div>
+
+    <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/three.min.js"></script>
+    <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/viewer3D.min.js?v=v2.10"></script>
+    <script src="./Autodesk.DASample.Viewing.Extension.DisplayXData.js"></script>
+
+    <script>
+        var viewerDocument;
+        var customdatalocation;
+        var viewertype;
+        var propertylocation;
+        var xdatainfo = {};
+        // Get the urls from the query parameters
+        //
+        var query = window.location.search.substring(1);
+        var vars = query.split('&');
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split('=');
+            if (pair[0] == "result") {
+                viewerDocument = decodeURIComponent(pair[1]);
+            } else if (pair[0] == "data") {
+                customdatalocation = decodeURIComponent(pair[1]);
+            } else if (pair[0] == "type") {
+                viewertype = decodeURIComponent(pair[1]);
+            }
+        }
+
+        if (viewertype == "2d") {
+            // The source folder is in a subfolder for F2D.
+            propertylocation = viewerDocument.substring(0, viewerDocument.lastIndexOf("/"));
+            propertylocation = propertylocation.substring(0, propertylocation.lastIndexOf("/")) + "/";
+        } else {
+            // The source folder is in the root
+            propertylocation = viewerDocument.substring(0, viewerDocument.lastIndexOf("/")) + "/";
+        }
+
+        // Get xdata and store it with the object handle as the key
+        //
+        sendRequest(customdatalocation, "GET", null, null, function (status, response) {
+            if (status) {
+                var info = JSON.parse(response);
+                var length = info.length;
+                for (var i = 0; i < length; i++) {
+                    xdatainfo[info[i].Id] = info[i];
+                }
+            }
+        });
+
+        var options = {
+            'env': 'Local',
+            'document': viewerDocument,
+            'sharedPropertyDbPath': propertylocation
+        };
+
+        var myViewerDiv = document.getElementById('MyViewerDiv');
+        var viewer = new Autodesk.Viewing.Private.GuiViewer3D(myViewerDiv,
+        { extensions: ['Autodesk.DASample.Viewing.Extension.DisplayXData'] });
+
+        Autodesk.Viewing.Initializer(options, function () {
+            viewer.start(options.document, options, function () {
+
+            });
+        });
+
+        // Helper function to send the request
+        //
+        function sendRequest(url, httpmethod, contenttype, payload, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open(httpmethod, url, true);
+            if (contenttype)
+                xhr.setRequestHeader("Content-Type", contenttype);
+            xhr.onload = function (e) {
+                if (this.status == 200) {
+                    callback(true, this.responseText);
+                } else {
+                    callback(false);
+                }
+            }
+
+            xhr.onerror = function () {
+                callback(false);
+            };
+
+            xhr.send(payload);
+        }
+    </script>
+</body>
+</html>

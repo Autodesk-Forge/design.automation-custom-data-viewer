@@ -1,0 +1,14 @@
+{
+  "name": "ViewerSampleServer",
+  "version": "0.1.0",
+  "description": "ViewerSampleServer",
+  "main": "setup.js",
+  "author": {
+    "name": "George Varghese",
+    "email": "george.varghese@autodesk.com"
+  },
+  "dependencies": {
+    "express": ">= 4.12.3"      
+  }
+}
+

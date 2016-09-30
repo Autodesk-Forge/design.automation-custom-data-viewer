@@ -11,16 +11,29 @@ namespace ClientApp
     class Program
     {
         static readonly string PackageName = "MyCustomPackage";
+        static readonly string zip = "package.zip";
+
         static void Main(string[] args)
         {
+            if (!File.Exists("RxApp.dll"))
+            {
+                Console.WriteLine("Error building RxApp.dll");
+                return;
+            }
             string zipfile = CreateZip();
+            if (string.IsNullOrEmpty(zipfile))
+            {
+                Console.WriteLine("Error creating package.zip");
+                return;
+            }
+
+            File.Copy(zip, "..\\" + zip, true);
             Console.WriteLine("The package.zip was successfully created");
         }
 
         static string CreateZip()
         {
             Console.WriteLine("Generating autoloader zip...");
-            string zip = "package.zip";
             if (File.Exists(zip))
                 File.Delete(zip);
             using (var archive = ZipFile.Open(zip, ZipArchiveMode.Create))

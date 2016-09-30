@@ -1,0 +1,114 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: ${env:DA_VIEWER_SERVIVCE_NAME}
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+
+# you can overwrite defaults here
+  stage: stage
+  region: us-west-2
+
+# you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "lambda:InvokeFunction"
+      Resource: "*"
+
+# you can add packaging information here
+#package:
+#  include:
+#    - include-me.js
+#  exclude:
+#    - exclude-me.js
+#  artifact: my-service-code.zip
+
+functions:
+  myuploadlocation:
+    handler: app.uploadlocation
+    timeout: 30
+    events:
+      - http:
+          path: uploadlocation
+          method: get
+          cors: true
+          request: 
+            template:
+                application/json: '{ "dwgname" : "$input.params(''dwgname'')" }'
+
+  mysubmitworkitem:
+    handler: app.submitworkitem
+    timeout: 30
+    events:
+      - http:
+          path: submitworkitem
+          method: post
+          cors: true
+          request: 
+            template:
+                application/json: '{ "dwglocation" : $input.json(''$.dwglocation''), "activityname" : $input.json(''$.activityname'') }'
+
+  myworkitemstatus:
+    handler: app.workitemstatus
+    timeout: 30
+    events:
+      - http:
+          path: workitemstatus
+          method: get
+          cors: true
+          request: 
+            template:
+                application/json: '{ "workitemid" : "$input.params(''workitemid'')" }'
+
+  myprocessresult:
+    handler: app.processresult
+    timeout: 30
+    events:
+      - http:
+          path: processresult
+          method: post
+          cors: true
+          request: 
+            template:
+                application/json: '{ "output" : $input.json(''$.output'') }'
+
+#      - s3: ${env:BUCKET}
+#      - schedule: rate(10 minutes)
+#      - sns: greeter-topic
+
+# you can add CloudFormation resource templates here
+resources:
+  Resources:
+    NewResource1:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${env:DA_VIEWER_DWG_BUCKET}
+        CorsConfiguration:
+            CorsRules:
+                - 
+                    AllowedHeaders:
+                        - '*'
+                    AllowedMethods:
+                        - 'GET'
+                        - 'PUT'
+                        - 'POST'
+                    AllowedOrigins:
+                        - '*'
+                    MaxAge: 3000
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"

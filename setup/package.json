@@ -1,0 +1,14 @@
+{
+  "name": "ViewerSampleSetup",
+  "version": "0.1.0",
+  "description": "ViewerSampleSetup",
+  "main": "setup.js",
+  "author": {
+    "name": "George Varghese",
+    "email": "george.varghese@autodesk.com"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.2.48",
+    "uuid": "^2.0.2"
+  }
+}

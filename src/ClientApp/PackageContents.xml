@@ -29,9 +29,6 @@
             <Commands GroupName="MyTestCommands">
                 <Command Global="TEST" Local="TEST" />
             </Commands>
-          <AssemblyMappings>
-            <AssemblyMapping Name="MyCustomPackage.Newtonsoft.Json" Path="./Contents/Newtonsoft.Json.dll" />
-          </AssemblyMappings>
         </ComponentEntry>
     </Components>
 </ApplicationPackage>
