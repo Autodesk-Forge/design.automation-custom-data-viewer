@@ -30,16 +30,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AcCoreMgd, Version=20.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\ClientApp\packages\AutoCAD.NET.Core.20.0.0\lib\45\AcCoreMgd.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="AcCoreMgd, Version=21.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoCAD.NET.Core.21.0.1\lib\45\AcCoreMgd.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="AcDbMgd, Version=20.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\ClientApp\packages\AutoCAD.NET.Model.20.0.0\lib\45\AcDbMgd.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="AcDbMgd, Version=21.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoCAD.NET.Model.21.0.0\lib\45\AcDbMgd.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="acdbmgdbrep, Version=20.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\ClientApp\packages\AutoCAD.NET.Model.20.0.0\lib\45\acdbmgdbrep.dll</HintPath>
+    <Reference Include="AcDbMgdBrep, Version=21.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoCAD.NET.Model.21.0.0\lib\45\AcDbMgdBrep.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
