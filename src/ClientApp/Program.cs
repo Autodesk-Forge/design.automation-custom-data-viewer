@@ -32,15 +32,24 @@ namespace ClientApp
 
         static readonly string RequiredEngineVersion = "21.0";
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            Dictionary<string, string> dict = new Dictionary<string, string>();
+            Credentials.ConsumerKey = Environment.GetEnvironmentVariable("ADSK_DEVELOPER_KEY");
+            Credentials.ConsumerSecret = Environment.GetEnvironmentVariable("ADSK_DEVELOPER_SECRET");
+
+            if (string.IsNullOrEmpty(Credentials.ConsumerKey) || string.IsNullOrEmpty(Credentials.ConsumerSecret))
+            {
+                Console.WriteLine("Please enter valid Autodesk consumer key secret");
+                return 1;
+            }
+
+            Dictionary <string, string> dict = new Dictionary<string, string>();
             dict.Add("scope", "code:all");
             var token = GetToken(dict);
             if (token == null)
             {
                 Console.WriteLine("Error obtaining access token");
-                return;
+                return 1;
             }
 
             string url = Credentials.baseUrl + "/autocad.io/us-east/v2/";
@@ -52,7 +61,7 @@ namespace ClientApp
             if (package == null)
             {
                 Console.WriteLine("Error creating app package");
-                return;
+                return 1;
             }
 
             // Create the custom activity
@@ -61,18 +70,20 @@ namespace ClientApp
             if (activity == null)
             {
                 Console.WriteLine("Error creating custom activity: " + ActivityName2d);
-                return;
+                return 1;
             }
 
             activity = CreateActivity(ActivityName3d, Script3d, container);
             if (activity == null)
             {
                 Console.WriteLine("Error creating custom activity: " + ActivityName3d);
-                return;
+                return 1;
             }
 
             // Save changes if any
             container.SaveChanges();
+
+            return 0;
         }
 
         public static string GetToken(Dictionary<string, string> inValues)
