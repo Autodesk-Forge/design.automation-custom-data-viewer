@@ -4,23 +4,18 @@ The sample code shows the combined usage of DesignAutomation API (https://develo
 ## Pre-requisites
 1. Visual Studio 2015 (https://msdn.microsoft.com/en-us/default.aspx)
 2. Nodejs (https://nodejs.org/en/download/)
-3. Serverless npm package (v1.0 or above), v1.0 is still in beta, and so please run 
-   npm install -g serverless@Beta
-   to install v1.0 of the package. There has been a significant change in v1.0 and the sample is based on v1.0.
-   If you run 'npm install -g serverless' the sample will not run since it is going to install v0.5.*
-4. Amazon Web Service access key and secret (https://aws.amazon.com/).
-5. Autodesk Developer access key and secret (https://developer.autodesk.com/).
+3. Amazon Web Service access key and secret (https://aws.amazon.com/).
+4. Autodesk Developer access key and secret (https://developer.autodesk.com/).
 
 
 ## Setup
 1. Verify that you have all the pre-requisites.
 2. Open .\src\SampleApp.sln in VisualStudio 2015.
-3. Right click on the solution in the solution explorer, and click restore nuget packages.
-4. Right click on the solution, click Build solution.
-5. Run ClientApp application. This will create .\src\binpackage.zip.
-6. Open .\setup\init.bat and enter the values. All the values are needed to run the sample.
-7. Open command prompt window, change directory to .\setup\
-8. Run setup.bat
+3. Build solution.
+4. Run ClientApp application. This will create .\src\binpackage.zip.
+5. Open .\setup\init.bat in your favorite text editor and enter the values. All the values are needed to run the sample.
+6. Open command prompt window, change directory to .\setup\
+7. Run setup.bat
 
 ## Setup Workflow
 1. The dependencies are downloaded for the various projects
