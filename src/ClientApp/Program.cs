@@ -1,35 +1,198 @@
-﻿using System;
+﻿using ClientApp.ACES.Models;
+using ClientApp.Operations;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ClientApp
 {
+    class Credentials
+    {
+        // Get your ConsumerKey/ConsumerSecret from https://developer.autodesk.com
+        //
+        public static string baseUrl = "https://developer.api.autodesk.com";
+        public static string ConsumerKey = "bZ0hLKYhNXhyHSgXchS7HFF0nCAmZBnR";
+        public static string ConsumerSecret = "TJPfdIzwgLGCTHyL";
+    }
+
     class Program
     {
         static readonly string PackageName = "MyCustomPackage";
         static readonly string zip = "package.zip";
+        static readonly string ActivityName2d = "MyPublishActivity2d";
+        static readonly string ActivityName3d = "MyPublishActivity3d";
+        static readonly string Script2d = "_test ./result/xdata.json\r\n_prepareforpropertyextraction index.json\r\n_indexextractor index.json\r\n_publishtof2d ./output\r\n_createbubblepackage ./output ./result \r\n\n";
+        static readonly string Script3d = "_test ./result/xdata.json\r\n_prepareforpropertyextraction index.json\r\n_indexextractor index.json\r\n_publishtosvf ./output/result.svf\r\n_createbubblepackage ./output ./result \r\n\n";
+
+        static readonly string RequiredEngineVersion = "21.0";
 
         static void Main(string[] args)
         {
+            Dictionary<string, string> dict = new Dictionary<string, string>();
+            dict.Add("scope", "code:all");
+            var token = GetToken(dict);
+            if (token == null)
+            {
+                Console.WriteLine("Error obtaining access token");
+                return;
+            }
+
+            string url = Credentials.baseUrl + "/autocad.io/us-east/v2/";
+            Container container = new Container(new Uri(url));
+            container.SendingRequest2 += (sender, e) => e.RequestMessage.SetHeader("Authorization", token);
+
+            // Create the app package if it does not exist
+            AppPackage package = CreatePackage(container);            
+            if (package == null)
+            {
+                Console.WriteLine("Error creating app package");
+                return;
+            }
+
+            // Create the custom activity
+            //
+            Activity activity = CreateActivity(ActivityName2d, Script2d, container);
+            if (activity == null)
+            {
+                Console.WriteLine("Error creating custom activity: " + ActivityName2d);
+                return;
+            }
+
+            activity = CreateActivity(ActivityName3d, Script3d, container);
+            if (activity == null)
+            {
+                Console.WriteLine("Error creating custom activity: " + ActivityName3d);
+                return;
+            }
+
+            // Save changes if any
+            container.SaveChanges();
+        }
+
+        public static string GetToken(Dictionary<string, string> inValues)
+        {
+            using (var client = new HttpClient())
+            {
+                var values = new List<KeyValuePair<string, string>>();
+                values.Add(new KeyValuePair<string, string>("client_id", Credentials.ConsumerKey));
+                values.Add(new KeyValuePair<string, string>("client_secret", Credentials.ConsumerSecret));
+                values.Add(new KeyValuePair<string, string>("grant_type", "client_credentials"));
+
+                if (inValues != null)
+                {
+                    foreach (KeyValuePair<string, string> val in inValues)
+                        values.Add(val);
+                }
+
+                var requestContent = new FormUrlEncodedContent(values);
+                string url = Credentials.baseUrl + "/authentication/v1/authenticate";
+                var response = client.PostAsync(url, requestContent).Result;
+                var responseContent = response.Content.ReadAsStringAsync().Result;
+                var resValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseContent);
+                return resValues["token_type"] + " " + resValues["access_token"];
+            }
+        }
+
+        static AppPackage CreatePackage(Container container)
+        {
+            AppPackage package = null;
+            try
+            {
+                package = container.AppPackages.ByKey(PackageName).GetValue();
+            }
+            catch
+            {
+            }
+            if (package != null)
+            {
+                Console.WriteLine("The app package '" + PackageName + "' already exists");
+                return package;
+            }
+
             if (!File.Exists("RxApp.dll"))
             {
                 Console.WriteLine("Error building RxApp.dll");
-                return;
+                return null;
             }
             string zipfile = CreateZip();
             if (string.IsNullOrEmpty(zipfile))
             {
                 Console.WriteLine("Error creating package.zip");
-                return;
+                return null;
+            }
+            Console.WriteLine("The package.zip file was successfully created");
+
+            Console.WriteLine("Creating/Updating AppPackage...");
+            // Query for the url to upload the AppPackage file
+            var url = container.AppPackages.GetUploadUrl().GetValue();
+            var client = new HttpClient();
+            // Upload AppPackage file
+            client.PutAsync(url, new StreamContent(File.OpenRead(zip))).Result.EnsureSuccessStatusCode();
+
+            // third step -- after upload, create the AppPackage entity
+            if (package == null)
+            {
+                package = new AppPackage()
+                {
+                    Id = PackageName,
+                    RequiredEngineVersion = RequiredEngineVersion,
+                    Resource = url
+                };
+                container.AddToAppPackages(package);
+            }
+            else
+            {
+                package.Resource = url;
+                container.UpdateObject(package);
             }
 
-            File.Copy(zip, "..\\" + zip, true);
-            Console.WriteLine("The package.zip was successfully created");
+            container.SaveChanges();
+            return package;
         }
+
+
+        static Activity CreateActivity(string activityname, string script, Container container)
+        {
+            Activity activity = null;
+            try { activity = container.Activities.ByKey(activityname).GetValue(); }
+            catch { }
+            if (activity != null)
+            {
+                Console.WriteLine("The activity '" + activityname + "' already exists");
+                return activity;
+            }
+
+            Console.WriteLine("Creating/Updating Activity...");
+            activity = new Activity()
+            {
+                Id = activityname,
+                Instruction = new Instruction()
+                {
+                    Script = script
+                },
+                Parameters = new Parameters()
+                {
+                    InputParameters = {
+                        new Parameter() { Name = "HostDwg", LocalFileName = "$(HostDwg)" },
+                        new Parameter() { Name = "Params", LocalFileName = "params.json" },
+                    },
+                    OutputParameters = { new Parameter() { Name = "Results", LocalFileName = "result" } }
+                },
+                RequiredEngineVersion = RequiredEngineVersion
+            };
+            activity.AppPackages.Add(PackageName); 
+            activity.AppPackages.Add("Publish2View21"); // reference the custom AppPackage
+            container.AddToActivities(activity);
+            container.SaveChanges();
+            return activity;
+        }
+
 
         static string CreateZip()
         {

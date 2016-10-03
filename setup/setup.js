@@ -6,8 +6,6 @@ var readline = require('readline');
 const exec = require('child_process').exec;
 
 var configfile = '..\\src\\lambda\\config.js';
-var packagefiledir = '..\\src\\bin';
-var packagefile = 'package.zip';
 var deployfile = '..\\src\\lambda\\deploy.bat';
 var indexfile = '..\\src\\www\\index.html';
 var startmarker = 'endpoints:';
@@ -33,103 +31,42 @@ var variables = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_DEFAULT_REGI
         return;
     }
 
-    var packagepath = packagefiledir + '\\' + packagefile;
-    if (!fs.existsSync(packagepath)) {
-        console.error('Error: missing file ' + packagepath);
-        return;
-    }
-
-    console.log("Upload the App package...");
-    // Upload the package.zip file to S3
-    var packagebucketname = process.env['DA_VIEWER_DWG_BUCKET'] + '-package';
-    uploadAppPackage(packagepath, packagefile, packagebucketname, function (status, signedurl) {
+    console.log("Update the config file...");
+    // Update the config file
+    //
+    updateConfigFile(function (status) {
         if (!status) {
             return;
         }
 
-        console.log("Update the config file...");
-        // Update the config file
+        console.log("Deploying the service, this will take sometime");
+        // Start the deployment
         //
-        updateConfigFile(signedurl, function (status) {
+        execbatchfile(deployfile, function (status, text) {
             if (!status) {
+                console.log("Error deploying to AWS");
                 return;
             }
 
-            console.log("Deploying the service, this will take sometime");
-            // Start the deployment
+            // Update the html file
             //
-            execbatchfile(deployfile, function (status, text) {
-                if (!status) {
-                    console.log("Error deploying to AWS");
-                    return;
+            var output = text.toString();
+            console.log(output);
+            console.log("Update the html file...");
+            updateUrl(output, function (status) {
+                if (status) {
+                    console.log('Successfully updated index.html');
                 }
-
-                // Update the html file
-                //
-                var output = text.toString();
-                console.log(output);
-                console.log("Update the html file...");
-                updateUrl(output, function (status) {
-                    if (status) {
-                        console.log('Successfully updated index.html');
-                    }
-                });
             });
-        });       
+        });
     });
     
 })();
 
-// Creates an S3 bucket for a package and upload the package
-//
-function uploadAppPackage(packagepath, packagefile, bucketname, callback) {
-
-    AWS.config.region = 'us-west-2';
-    var s3 = new AWS.S3({ params: { Bucket: bucketname } });
-
-    s3.createBucket(function (err, data) {        
-        if (err) {
-            if (err.code !== 'BucketAlreadyExists' && err.code !== 'BucketAlreadyOwnedByYou') {
-                callback(false);
-                return;
-            }
-        }
-
-        var data = fs.readFileSync(packagepath);
-        if (!data) {
-            console.log("Error reading file " + packagepath);
-            callback(false);
-            return;
-        }
-
-        var key = "package/" + packagefile;
-        var params = { Bucket: bucketname, Key: key, Body: data };
-
-        s3.upload(params, function (err, data) {
-            if (err) {
-                console.log('Error: uploading to S3' + ': ' + err);
-                callback(false);
-                return;
-            }
-
-            params = { Bucket: bucketname, Key: key };
-            var url = s3.getSignedUrl('getObject', params);
-
-            if (!url) {
-                console.log('Error: getting pre-signed url ' + ': ' + err);
-                callback(false);
-                return;
-            }
-
-            callback(true, url);
-        });
-    });
-}
-
 
 // Updates the config file with actual values
 //
-function updateConfigFile(signedurl, callback) {
+function updateConfigFile(callback) {
 
     var file = fs.createReadStream(configfile, 'utf8');
     var newdata = '';    
@@ -139,7 +76,6 @@ function updateConfigFile(signedurl, callback) {
             updatedata = updatedata.toString().replace(val, process.env[val]);
         });
         
-        updatedata = updatedata.toString().replace('package_source_endpoint_value', signedurl);
         newdata += updatedata;
     });
 

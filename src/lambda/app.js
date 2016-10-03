@@ -11,7 +11,8 @@ var path = require('path');
 // local files
 var config = require("./config.js");
 
-
+// The function returns a pre-signed url location that the client can upload the drawing
+//
 module.exports.uploadlocation = (event, context, callback) => {
     
     // The drawing name is passed as part of the input request
@@ -40,21 +41,16 @@ module.exports.uploadlocation = (event, context, callback) => {
     }
 };
 
-
+// The function takes the activity name, and the location of the drawing file as input. 
+// It checks if the custom package and the activity are present. 
+// And then the workitem is then submitted using the DesignAutomation API, configured to run the 
+// activity that was passed.
+//
 module.exports.submitworkitem = (event, context, callback) => {
 
     // Get the activity name from the request
     //
-    var actlength = config.activities.length;
-    var activityname;
-    var script;
-    for (var i = 0; i < actlength; i++) {
-        if (config.activities[i].name === event.activityname) {
-            activityname = config.activities[i].name;
-            script = config.activities[i].script;
-            break;
-        }
-    }
+    var activityname = event.activityname;
 
     if (!activityname) {
         callback("Error: Invalid activity name", "Error message");
@@ -95,7 +91,7 @@ module.exports.submitworkitem = (event, context, callback) => {
             return;
         }
 
-        start(token, url, activityname, script, function (ret, workitemId) {
+        submitItem(token, url, activityname, function (ret, workitemId) {
             if (ret) {
                 context.callbackWaitsForEmptyEventLoop = false;
                 var param = { Result: workitemId };
@@ -106,9 +102,18 @@ module.exports.submitworkitem = (event, context, callback) => {
             }
         });
     });
-
 }
 
+// The function takes the workitem identifier as the input, and checks the 
+// status of the respective workitem. The function uses the DesignAutomation 
+// API to poll the status. It returns immediately on success or failure of the 
+// workitem. If the workitem status is pending or in-progress, it loops through, 
+// polling the status every two seconds for up to twenty seconds and then returns. 
+// The reason it returns after twenty seconds is due to a thirty second timeout 
+// limit set by the AWS API gateway. If the API does not respond within thirty 
+// seconds, then the request is terminated and an error status of 504 is returned 
+// by the AWS API gateway.
+//
 module.exports.workitemstatus = (event, context, callback) => {
 
     // Get the workitem id from the request
@@ -137,9 +142,13 @@ module.exports.workitemstatus = (event, context, callback) => {
             }
         });
     });
-
 }
 
+// The function takes the location of the result posted by DesignAutomation API 
+// for the workitem that was submitted. The result which is a compressed file 
+// containing the output is uncompressed by the function and uploaded to a unique 
+// location on S3. The location of the SVF/F2D and the XData files are returned.
+//
 module.exports.processresult = (event, context, callback) => {
 
     var url = event.output;
@@ -179,13 +188,12 @@ module.exports.processresult = (event, context, callback) => {
 // The function creates the app package and the custom activity if not available and then submits the 
 // workitem for the given drawing.
 //
-function start(token, dwgLocation, activityname, script, callback) {
+function submitItem(token, dwgLocation, activityname, callback) {
 
-    createPackage(token, config.package_name, config.package_endpoint, config.package_source_endpoint, config.package_upload_endpoint, function (ret) {
-        if (ret) {
-            console.log("Successfully created the app package");
-            createActivity(config.activity_endpoint, token, config.package_name, config.refpackage_name, activityname, script, function (ret) {
-                if (ret) {
+    isPackageAvailable(config.package_endpoint, token, config.package_name, function (status) {
+        if (status) {
+            isActivityAvailable(config.activity_endpoint, token, activityname, function (status) {
+                if (status) {
                     submitWorkItem(config.workitem_endpoint, token, activityname, dwgLocation, function (ret, workitemId) {
                         if (ret) {
                             console.log("Sucessfully submitted the workitem");
@@ -195,18 +203,18 @@ function start(token, dwgLocation, activityname, script, callback) {
                             callback(false);
                         }
                     });
-
                 } else {
+                    console.log("Error: Activity " + activityname + " not available ");
                     callback(false);
                     return;
                 }
             });
         } else {
-            console.log("Error: failed creating the app package");
+            console.log("Error: AppPackage " + config.package_name + " not available ");
             callback(false);
+            return;
         }
     });
-
 }
 
 // Get the result and process it. 
@@ -343,109 +351,6 @@ function isPackageAvailable(url, token, packagename, callback) {
     });
 }
 
-// Helper function to delete a package, it is not used
-//
-function deletePackage(url, token, packagename, callback) {
-    var uri = url + "(\'" + packagename + "\')";
-    sendAuthData(uri, 'DELETE', token, null, function (status) {
-        if (status == 200 || status == 204)
-            callback(true);
-        else
-            callback(false);
-    });
-}
-
-// Helper function to create an app package, the function does an early return if
-// the package is already available. The function gets the package upload pre-signed 
-// url using the DesignAutomation API. The package is then uploaded from the 
-// source url to the target provided by the API. 
-//
-function createPackage(token, packagename, packageurl, packagesourceurl, packageuploadurl, callback) {
-
-    // Check if the package already exists, and if does exist, return.
-    isPackageAvailable(packageurl, token, packagename, function (status) {
-        if (status) {
-            callback(true);
-            return;
-        } else {
-
-            getpackageuploadurl(packageuploadurl, token, function (value) {
-                if (value) {
-                    uploadPackage(packagesourceurl, value, token, function (status) {
-                        if (status) {
-                            var uploadbody = {
-                                "@odata.type": "#ACES.Models.AppPackage",
-                                "Description": null,
-                                "Id": packagename,
-                                "IsObjectEnabler": false,
-                                "IsPublic": false,
-                                "References@odata.type": "#Collection(String)",
-                                "References": [],
-                                "RequiredEngineVersion": config.required_engineversion,
-                                "Resource": value,
-                                "Timestamp": "0001-01-01T00:00:00Z",
-                                "Version": 0
-                            };
-
-                            sendAuthData(packageurl, 'POST', token, uploadbody, function (status, body) {
-                                if (status == 200 || status == 201) {
-                                    callback(true);
-                                }
-                                else {
-                                    callback(false);
-                                }
-                            });
-                        }
-                        else {
-                            console.log("Error: Could not upload the package data");
-                            callback(false);
-                        }
-                    });
-                }
-                else {
-                    console.log("Error: Could not obtain the upload url");
-                    callback(false);
-                }
-            });
-        }
-    });
-
-}
-
-// Helper function that returns the location where the package needs to 
-// be uploaded.
-//
-function getpackageuploadurl(url, token, callback) {
-    sendAuthData(url, 'GET', token, null, function (status, body) {
-        if (status == 200) {
-            var bodyObj = JSON.parse(body);
-            callback(bodyObj.value);
-        }
-        else {
-            callback(null);
-        }
-    });
-}
-
-// This function uploads the package to the target location
-//
-function uploadPackage(packagessourceurl, url, token, callback) {
-    getBinaryData(packagessourceurl, function (status, body) {
-        if (status == 200) {
-            sendData(url, 'PUT', body, function (status, body) {
-                if (status == 200) {
-                    callback(true);
-                } else {
-                    callback(false);
-                }
-            });
-        }
-        else {
-            callback(false);
-        }
-    });
-}
-
 // The function checks if the activity with the given name is available
 //
 function isActivityAvailable(url, token, activityname, callback) {
@@ -456,96 +361,6 @@ function isActivityAvailable(url, token, activityname, callback) {
         else
             callback(false);
     });
-}
-
-// Helper function to delete an activity
-//
-function deleteActivity(url, token, activityname, callback) {
-    var uri = url + "(\'" + activityname + "\')";
-    sendAuthData(uri, 'DELETE', token, null, function (status) {
-        if (status == 200 || status == 204)
-            callback(true);
-        else
-            callback(false);
-    });
-}
-
-// The function creates an activity using the DesignAutomation API if the activity is not available.
-// The package references another package which is added.
-//
-function createActivity(url, token, packagename, refpackagename, activityname, script, callback) {
-
-    // Check if the activity already exists, return if it does exist.
-    isActivityAvailable(url, token, activityname, function (ret) {
-        if (ret) {
-            callback(true);
-            return;
-        } else {
-
-            var activitybody = {
-                "@odata.type": "#ACES.Models.Activity",
-                "AllowedChildProcesses@odata.type": "#Collection(ACES.Models.AllowedChildProcess)",
-                "AllowedChildProcesses": [],
-                "AppPackages@odata.type": "#Collection(String)",
-                "AppPackages": [],
-                "Description": null,
-                "HostApplication": null,
-                "Id": "",
-                "Instruction": {
-                    "@odata.type": "#ACES.Models.Instruction",
-                    "CommandLineParameters": null,
-                    "Script": ""
-                },
-                "IsPublic": false,
-                "Parameters": {
-                    "@odata.type": "#ACES.Models.Parameters",
-                    "InputParameters@odata.type": "#Collection(ACES.Models.Parameter)",
-                    "InputParameters": [
-                        {
-                            "@odata.type": "#ACES.Models.Parameter",
-                            "LocalFileName": "$(HostDwg)",
-                            "Name": "HostDwg",
-                            "Optional": null
-                        },
-                        {
-                            "@odata.type": "#ACES.Models.Parameter",
-                            "LocalFileName": "params.json",
-                            "Name": "Params",
-                            "Optional": null
-                        }
-                    ],
-                    "OutputParameters@odata.type": "#Collection(ACES.Models.Parameter)",
-                    "OutputParameters": [
-                        {
-                            "@odata.type": "#ACES.Models.Parameter",
-                            "LocalFileName": "result",
-                            "Name": "Results",
-                            "Optional": null
-                        }
-                    ]
-                },
-                "RequiredEngineVersion": config.required_engineversion,
-                "Timestamp": "0001-01-01T00:00:00Z",
-                "Version": 0
-            };
-
-            activitybody.Id = activityname;
-            activitybody.AppPackages.push(packagename);
-            activitybody.AppPackages.push(refpackagename);
-            activitybody.Instruction.Script = script;
-
-            sendAuthData(url, 'POST', token, activitybody, function (status, body) {
-                if (status == 200 || status == 201) {
-                    console.log("Created activity");
-                    callback(true);
-                } else {
-                    console.log("Error: Creating activity");
-                    callback(false);
-                }
-            });
-        }
-    });
-
 }
 
 // The functions submits a workitem using the Design Automation API.
@@ -737,4 +552,3 @@ function getToken(url, key, secret, callback) {
         callback(token);
     });
 }
-
