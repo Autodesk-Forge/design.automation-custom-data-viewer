@@ -17,8 +17,8 @@ namespace ClientApp
         // Get your ConsumerKey/ConsumerSecret from https://developer.autodesk.com
         //
         public static string baseUrl = "https://developer.api.autodesk.com";
-        public static string ConsumerKey = "bZ0hLKYhNXhyHSgXchS7HFF0nCAmZBnR";
-        public static string ConsumerSecret = "TJPfdIzwgLGCTHyL";
+        public static string ConsumerKey = "";
+        public static string ConsumerSecret = "";
     }
 
     class Program
