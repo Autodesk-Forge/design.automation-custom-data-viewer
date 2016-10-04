@@ -8,6 +8,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ClientApp
@@ -113,8 +114,16 @@ namespace ClientApp
             }
             if (package != null)
             {
-                Console.WriteLine("The app package '" + PackageName + "' already exists");
-                return package;
+                string res = null;
+                res = Prompts.PromptForKeyword(string.Format("AppPackage '{0}' already exists. What do you want to do? [Recreate/Update/Leave]<Update>", PackageName));
+                if (res == "Recreate")
+                {
+                    container.DeleteObject(package);
+                    container.SaveChanges();
+                    package = null;
+                }
+                if (res == "Leave")
+                    return package;
             }
 
             var dir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
@@ -167,8 +176,16 @@ namespace ClientApp
             catch { }
             if (activity != null)
             {
-                Console.WriteLine("The activity '" + activityname + "' already exists");
-                return activity;
+                if (Prompts.PromptForKeyword(string.Format("Activity '{0}' already exists. Do you want to recreate it? [Yes/No]<No>", activityname)) == "Yes")
+                {
+                    container.DeleteObject(activity);
+                    container.SaveChanges();
+                    activity = null;
+                }
+                else
+                {
+                    return activity;
+                }
             }
 
             Console.WriteLine("Creating/Updating Activity...");
@@ -213,4 +230,53 @@ namespace ClientApp
             return zip;
         }
     }
+
+    class Prompts
+    {
+        class KeywordPrompt
+        {
+            string[] m_keywords;
+            string m_default;
+            static Regex s_reg = new Regex(".*\\[(?<keywords>.*)\\]\\<(?<default>.*)\\>$");
+            public KeywordPrompt(string prompt)
+            {
+                var match = s_reg.Match(prompt);
+                if (!match.Success)
+                    throw new ArgumentException();
+                m_keywords = match.Groups["keywords"].Value.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                m_default = match.Groups["default"].Value;
+                string dummy;
+                if (string.IsNullOrEmpty(m_default) || !TryMatch(m_default, out dummy))
+                    throw new ArgumentException();
+            }
+            public bool TryMatch(string str, out string match)
+            {
+                if (string.IsNullOrEmpty(str))
+                {
+                    match = m_default;
+                    return true;
+                }
+                match = null;
+                var matches = m_keywords.Where(s => s.StartsWith(str, StringComparison.CurrentCultureIgnoreCase));
+                if (matches.Count() != 1)
+                    return false;
+                match = matches.First();
+                return true;
+            }
+        }
+        public static string PromptForKeyword(string promptString)
+        {
+            var prompt = new KeywordPrompt(promptString);
+            while (true)
+            {
+                Console.Write("{0}:", promptString);
+                var resp = Console.ReadLine();
+                string ret;
+                if (prompt.TryMatch(resp, out ret))
+                    return ret;
+            }
+
+        }
+    }
+
 }
