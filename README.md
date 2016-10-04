@@ -27,9 +27,8 @@ The sample code shows the combined usage of DesignAutomation API (https://develo
    - The lambdas are uploaded and configured.
    - APIs are created, configured using AWS API gateway to expose the lambdas.
    - A storage bucket is created and configured for processing dwg file.
-5. A bucket is created for the app package, and package.zip is uploaded to it.
-6. The html file is updated with the endpoints from the API gateway.
-7. A node server is started and the page is loaded from localhost on port 8080.
+5. The html file is updated with the endpoints from the API gateway.
+6. A node server is started and the page is loaded from localhost on port 8080.
 
 The sample app has essentially three parts
 
