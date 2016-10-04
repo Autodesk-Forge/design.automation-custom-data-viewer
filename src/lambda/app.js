@@ -367,70 +367,25 @@ function isActivityAvailable(url, token, activityname, callback) {
 //
 function submitWorkItem(url, token, activityname, resource, callback) {
     var workitembody = {
-        "@odata.type": "#ACES.Models.WorkItem",
         "ActivityId": activityname,
         "Arguments": {
-            "@odata.type": "#ACES.Models.Arguments",
-            "InputArguments@odata.type": "#Collection(ACES.Models.Argument)",
             "InputArguments": [
                 {
-                    "@odata.type": "#ACES.Models.Argument",
-                    "Headers@odata.type": "#Collection(ACES.Models.Header)",
-                    "Headers": [],
-                    "HttpVerb@odata.type": "#ACES.Models.HttpVerbType",
-                    "HttpVerb": null,
                     "Name": "HostDwg",
                     "Resource": resource,
-                    "ResourceKind@odata.type": "#ACES.Models.ResourceKind",
-                    "ResourceKind": null,
-                    "StorageProvider@odata.type": "#ACES.Models.StorageProvider",
-                    "StorageProvider": "Generic"
-                },
-                {
-                    "@odata.type": "#ACES.Models.Argument",
-                    "Headers@odata.type": "#Collection(ACES.Models.Header)",
-                    "Headers": [],
-                    "HttpVerb@odata.type": "#ACES.Models.HttpVerbType",
-                    "HttpVerb": null,
-                    "Name": "Params",
-                    "Resource": "data:application/json, ",
-                    "ResourceKind@odata.type": "#ACES.Models.ResourceKind",
-                    "ResourceKind": "Embedded",
-                    "StorageProvider@odata.type": "#ACES.Models.StorageProvider",
                     "StorageProvider": "Generic"
                 }
             ],
-            "OutputArguments@odata.type": "#Collection(ACES.Models.Argument)",
             "OutputArguments": [
                 {
-                    "@odata.type": "#ACES.Models.Argument",
-                    "Headers@odata.type": "#Collection(ACES.Models.Header)",
-                    "Headers": [],
-                    "HttpVerb@odata.type": "#ACES.Models.HttpVerbType",
                     "HttpVerb": "POST",
                     "Name": "Results",
                     "Resource": null,
-                    "ResourceKind@odata.type": "#ACES.Models.ResourceKind",
                     "ResourceKind": "ZipPackage",
-                    "StorageProvider@odata.type": "#ACES.Models.StorageProvider",
                     "StorageProvider": "Generic"
                 }
             ]
-        },
-        "AvailabilityZone@odata.type": "#ACES.Models.DataAffinity",
-        "AvailabilityZone": null,
-        "BytesTranferredIn": null,
-        "BytesTranferredOut": null,
-        "Id": "",
-        "Status@odata.type": "#ACES.Models.ExecutionStatus",
-        "Status": null,
-        "StatusDetails": null,
-        "TimeInputTransferStarted": null,
-        "TimeOutputTransferEnded": null,
-        "TimeQueued": null,
-        "TimeScriptEnded": null,
-        "TimeScriptStarted": null,
-        "Timestamp": "0001-01-01T00:00:00Z"
+        }
     };
 
     sendAuthData(url, 'POST', token, workitembody, function (status, param) {

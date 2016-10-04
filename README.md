@@ -13,7 +13,7 @@ The sample code shows the combined usage of DesignAutomation API (https://develo
 2. Open .\src\SampleApp.sln in VisualStudio 2015.
 3. Build solution.
 4. Open .\setup\init.bat in your favorite text editor and enter the values. All the values are needed to run the sample.
-5. Open command prompt window, change directory to .\setup\
+5. Open "Node.js command prompt" from the Windows Start Menu, change directory to .\setup\
 6. Run setup.bat
 
 ## Setup Workflow

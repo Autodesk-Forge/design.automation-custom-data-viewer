@@ -17,8 +17,6 @@ namespace ClientApp
         // Get your ConsumerKey/ConsumerSecret from https://developer.autodesk.com
         //
         public static string baseUrl = "https://developer.api.autodesk.com";
-        public static string ConsumerKey = "";
-        public static string ConsumerSecret = "";
     }
 
     class Program
@@ -34,18 +32,16 @@ namespace ClientApp
 
         static int Main(string[] args)
         {
-            Credentials.ConsumerKey = Environment.GetEnvironmentVariable("ADSK_DEVELOPER_KEY");
-            Credentials.ConsumerSecret = Environment.GetEnvironmentVariable("ADSK_DEVELOPER_SECRET");
+            var consumerKey = Environment.GetEnvironmentVariable("ADSK_DEVELOPER_KEY");
+            var consumerSecret = Environment.GetEnvironmentVariable("ADSK_DEVELOPER_SECRET");
 
-            if (string.IsNullOrEmpty(Credentials.ConsumerKey) || string.IsNullOrEmpty(Credentials.ConsumerSecret))
+            if (string.IsNullOrEmpty(consumerKey) || string.IsNullOrEmpty(consumerSecret))
             {
                 Console.WriteLine("Please enter valid Autodesk consumer key secret");
                 return 1;
             }
 
-            Dictionary <string, string> dict = new Dictionary<string, string>();
-            dict.Add("scope", "code:all");
-            var token = GetToken(dict);
+            var token = GetToken(consumerKey, consumerSecret);
             if (token == null)
             {
                 Console.WriteLine("Error obtaining access token");
@@ -86,21 +82,16 @@ namespace ClientApp
             return 0;
         }
 
-        public static string GetToken(Dictionary<string, string> inValues)
+        public static string GetToken(string consumerKey, string consumerSecret)
         {
             using (var client = new HttpClient())
             {
                 var values = new List<KeyValuePair<string, string>>();
-                values.Add(new KeyValuePair<string, string>("client_id", Credentials.ConsumerKey));
-                values.Add(new KeyValuePair<string, string>("client_secret", Credentials.ConsumerSecret));
+                values.Add(new KeyValuePair<string, string>("client_id", consumerKey));
+                values.Add(new KeyValuePair<string, string>("client_secret", consumerSecret));
                 values.Add(new KeyValuePair<string, string>("grant_type", "client_credentials"));
-
-                if (inValues != null)
-                {
-                    foreach (KeyValuePair<string, string> val in inValues)
-                        values.Add(val);
-                }
-
+                values.Add(new KeyValuePair<string, string>("scope", "code:all"));
+                
                 var requestContent = new FormUrlEncodedContent(values);
                 string url = Credentials.baseUrl + "/authentication/v1/authenticate";
                 var response = client.PostAsync(url, requestContent).Result;
@@ -126,7 +117,8 @@ namespace ClientApp
                 return package;
             }
 
-            if (!File.Exists("RxApp.dll"))
+            var dir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            if (!File.Exists(Path.Combine(dir, "RxApp.dll")))
             {
                 Console.WriteLine("Error building RxApp.dll");
                 return null;
@@ -190,8 +182,7 @@ namespace ClientApp
                 Parameters = new Parameters()
                 {
                     InputParameters = {
-                        new Parameter() { Name = "HostDwg", LocalFileName = "$(HostDwg)" },
-                        new Parameter() { Name = "Params", LocalFileName = "params.json" },
+                        new Parameter() { Name = "HostDwg", LocalFileName = "$(HostDwg)" }
                     },
                     OutputParameters = { new Parameter() { Name = "Results", LocalFileName = "result" } }
                 },
@@ -210,13 +201,14 @@ namespace ClientApp
             Console.WriteLine("Generating autoloader zip...");
             if (File.Exists(zip))
                 File.Delete(zip);
+            var dir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
             using (var archive = ZipFile.Open(zip, ZipArchiveMode.Create))
             {
                 string bundle = PackageName + ".bundle";
                 string name = "PackageContents.xml";
-                archive.CreateEntryFromFile(name, Path.Combine(bundle, name));
+                archive.CreateEntryFromFile(Path.Combine(dir,name), Path.Combine(bundle, name));
                 name = "RxApp.dll";
-                archive.CreateEntryFromFile(name, Path.Combine(bundle, "Contents", name));
+                archive.CreateEntryFromFile(Path.Combine(dir, name), Path.Combine(bundle, "Contents", name));
             }
             return zip;
         }
