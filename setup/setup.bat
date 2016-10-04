@@ -29,6 +29,10 @@ rem load the test page...
 cd ..\setup
 start "" http://localhost:8080
 
+goto done
 
 :failed
 echo setup failed
+
+:done
+
