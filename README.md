@@ -12,24 +12,24 @@ The sample code shows the combined usage of DesignAutomation API (https://develo
 1. Verify that you have all the pre-requisites.
 2. Open .\src\SampleApp.sln in VisualStudio 2015.
 3. Build solution.
-4. Run ClientApp application. This will create
+4. Open .\setup\init.bat in your favorite text editor and enter the values. All the values are needed to run the sample.
+5. Open command prompt window, change directory to .\setup\
+6. Run setup.bat
+
+## Setup Workflow
+1. This will run ClientApp executable. This will create
    - Zip package .\src\bin\<Debug\Release>\package.zip.
    - AppPackage using the DesignAutomation API.
    - Custom activities using the DesignAutomation API.
-5. Open .\setup\init.bat in your favorite text editor and enter the values. All the values are needed to run the sample.
-6. Open command prompt window, change directory to .\setup\
-7. Run setup.bat
-
-## Setup Workflow
-1. The dependencies are downloaded for the various projects
-2. The config.js file is updated with data needed to run the lambdas.
-2. The services is deployed using serverless framework
+2. The dependencies are downloaded for the various projects
+3. The config.js file is updated with data needed to run the lambdas.
+4. The services is deployed using serverless framework
    - The lambdas are uploaded and configured.
    - APIs are created, configured using AWS API gateway to expose the lambdas.
    - A storage bucket is created and configured for processing dwg file.
-3. A bucket is created for the app package, and package.zip is uploaded to it.
-4. The html file is updated with the endpoints from the API gateway.
-5. A node server is started and the page is loaded from localhost on port 8080.
+5. A bucket is created for the app package, and package.zip is uploaded to it.
+6. The html file is updated with the endpoints from the API gateway.
+7. A node server is started and the page is loaded from localhost on port 8080.
 
 The sample app has essentially three parts
 
