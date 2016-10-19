@@ -10,6 +10,8 @@ using System.Collections.ObjectModel;
 using Autodesk.AutoCAD.EditorInput;
 using System.IO;
 using System.Runtime.Serialization.Json;
+using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.ApplicationServices;
 
 [assembly: CommandClass(typeof(RxApp.Commands))]
 [assembly: ExtensionApplication(null)]
@@ -99,6 +101,58 @@ namespace RxApp
             catch (System.Exception e)
             {
                 ed.WriteMessage("Error: {0}", e);
+            }
+        }
+
+        [CommandMethod("MyTestCommand", "testpoly", CommandFlags.Modal)]
+        static public void Poly()
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            using (DocumentLock l = doc.LockDocument())
+            {
+                using (Transaction t = doc.Database.TransactionManager.StartTransaction())
+                {
+                    BlockTable bt = (BlockTable)t.GetObject(doc.Database.BlockTableId, OpenMode.ForRead);
+                    BlockTableRecord btr = (BlockTableRecord)t.GetObject(bt[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
+                    using (Autodesk.ObjectDbxSample.Poly poly = new Autodesk.ObjectDbxSample.Poly())
+                    {
+                        poly.Center = new Point2d(100, 100);
+                        poly.StartPoint2d = new Point2d(300, 100);
+                        poly.NumberOfSides = 5;
+                        poly.Name = "Managed Poly";
+
+                        btr.AppendEntity(poly);
+                        t.AddNewlyCreatedDBObject(poly, true);
+
+                        AddRegAppTableRecord("IOVIEWERSAMPLE");
+                        ResultBuffer rb = new ResultBuffer(new TypedValue(1001, "IOVIEWERSAMPLE"),
+                            new TypedValue(1000, "This is a sample string"));
+
+                        poly.XData = rb;
+                        rb.Dispose();
+                    }
+                    t.Commit();
+                }
+            }            
+        }
+
+        static void AddRegAppTableRecord(string regAppName)
+        {
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            Database db = doc.Database;
+            using (Transaction tr = doc.TransactionManager.StartTransaction())
+            {
+                RegAppTable regAppTable = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead, false);
+                if (!regAppTable.Has(regAppName))
+                {
+                    regAppTable.UpgradeOpen();
+                    RegAppTableRecord regAppTableRecord = new RegAppTableRecord();
+                    regAppTableRecord.Name = regAppName;
+                    regAppTable.Add(regAppTableRecord);
+                    tr.AddNewlyCreatedDBObject(regAppTableRecord, true);
+                }
+                tr.Commit();
             }
         }
     }

@@ -132,6 +132,17 @@ namespace ClientApp
                 Console.WriteLine("Error building RxApp.dll");
                 return null;
             }
+            if (!File.Exists(Path.Combine(dir, "asdkmgPoly.dll")))
+            {
+                Console.WriteLine("Error building asdkmgPoly.dll");
+                return null;
+            }
+            if (!File.Exists(Path.Combine(dir, "asdkpolyobj.dbx")))
+            {
+                Console.WriteLine("Error building asdkpolyobj.dbx");
+                return null;
+            }
+
             string zipfile = CreateZip();
             if (string.IsNullOrEmpty(zipfile))
             {
@@ -225,6 +236,10 @@ namespace ClientApp
                 string name = "PackageContents.xml";
                 archive.CreateEntryFromFile(Path.Combine(dir,name), Path.Combine(bundle, name));
                 name = "RxApp.dll";
+                archive.CreateEntryFromFile(Path.Combine(dir, name), Path.Combine(bundle, "Contents", name));
+                name = "asdkmgPoly.dll";
+                archive.CreateEntryFromFile(Path.Combine(dir, name), Path.Combine(bundle, "Contents", name));
+                name = "asdkpolyobj.dbx";
                 archive.CreateEntryFromFile(Path.Combine(dir, name), Path.Combine(bundle, "Contents", name));
             }
             return zip;
