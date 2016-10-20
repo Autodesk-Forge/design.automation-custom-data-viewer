@@ -1,5 +1,5 @@
 # IOViewerSample
-The sample code shows the combined usage of DesignAutomation API (https://developer.autodesk.com/en/docs/design-automation/v2) and the Viewer API (https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample application (http://viewersample.autocad.io/).
+The sample code shows the combined usage of DesignAutomation API (https://developer.autodesk.com/en/docs/design-automation/v2) and the Viewer API (https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample application (http://viewersample.autocad.io/). The sample displays the usage of custom objects, object enablers using DesignAutomation API.
 
 ## Pre-requisites
 1. Visual Studio 2015 (https://msdn.microsoft.com/en-us/default.aspx)
@@ -33,7 +33,8 @@ The sample code shows the combined usage of DesignAutomation API (https://develo
 The sample app has essentially three parts
 
 ##1. ARX Application
-The ARX application is written in .NET, it has a command called ‘TEST’. The TEST command extracts any XData associated with the entities to a JSON file. The ARX is uploaded as part of a custom package using the DesignAutomation API, and run as part of a custom activity.
+The ARX application is written in .NET, it has a command called ‘TEST’. The TEST command extracts any XData associated with the entities to a JSON file. 
+There is also another command called ‘TESTPOLY’ that creates the polysamp custom object. The ARX along with the object enablers and managed wrappers for polysamp custom object is uploaded as part of a custom package using the DesignAutomation API, and run as part of a custom activity. The object enablers and the respective managed wrappers for the polysamp custom object have been pre-built. Please refer to the ObjectARX sdk for the source code.
 
 
 ##2. AWS Lambdas
@@ -83,6 +84,7 @@ ua -> resultprocessor : process results;
 @enduml
 )
 
+###Workflow1:
 1.	The drawing is selected in the webpage.
 2.	A pre-signed url is obtained from the UploadLocation lambda using the AWS gateway API for uploading the drawing, and it is uploaded.
 3.	The SubmitWorkItem lambda is invoked passing the location of the uploaded drawing, and the activity name.
@@ -94,4 +96,16 @@ ua -> resultprocessor : process results;
 9.	A new browser window is launched passing the location of the files when the Viewer button is clicked.
 10.	The SVF/F2D files are displayed using the Viewer API in the Window. The Viewer API is used to implement the extension to display the XData of the object.
 11.	When an object is selected, the XData information is searched if the object has any associated XData using the object handle. If it has, then the values are displayed in a properties panel created using the Viewer API.
+
+###Workflow2:
+1.	Create custom object is selected in the Webpage.
+2.	The SubmitWorkItem lambda is invoked passing the location of the empty drawing.
+3.	The workitem referencing the custom activity to create the custom object is submitted.
+4.	The workitem status is queried by the client if the workitem has been successfully submitted. The status is queried using the WorkItemStatus lambda. The lambda uses the DesignAutomation API to get the status and return it to the client.
+5.	On success, the workitem output location is returned to the client.
+6.	The ProcessResult lambda is invoked with the location of the output, which is a zip file.
+7.	The output file is uncompressed by the lambda, uploads it to S3. It returns the location of the SVF/F2D and XData files, which are among the uncompressed files.
+8.	A new browser window is launched passing the location of the files when the Viewer button is clicked.
+9.	The F2D files are displayed using the Viewer API in the Window. The Viewer API is used to implement the extension to display the XData of the object.
+10.	When an object is selected, the XData information is searched if the object has any associated XData using the object handle. If it has, then the values are displayed in a properties panel created using the Viewer API.
 
