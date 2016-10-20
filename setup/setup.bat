@@ -1,11 +1,8 @@
 rem call init.bat
 call init.bat
 rem call clientApp
-if exist ..\src\bin\Debug\ClientApp.exe (
-    ..\src\bin\Debug\ClientApp.exe
-) else (
-    ..\src\bin\Release\ClientApp.exe
-)
+..\src\bin\Output\ClientApp.exe
+
 if errorlevel 0 goto success
 goto failed
 :success
