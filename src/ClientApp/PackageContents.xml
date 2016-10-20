@@ -19,23 +19,22 @@
             OS="Win64" 
             Platform="AutoCAD" />        
         <ComponentEntry 
-          AppName="AsdkPolyCAD_DBX" 
-          ModuleName="./Contents/asdkpolyobj.dbx"
-          AppDescription="Custom Poly DBX Object, we load the module on startup"
-          LoadOnAutoCADStartup="True" />
+            AppName="AsdkPolyCAD_DBX" 
+            ModuleName="./Contents/asdkpolyobj.dbx"
+            AppDescription="Custom Poly DBX Object, we load the module on startup"
+            LoadOnAutoCADStartup="True" />
         <ComponentEntry
-                  AppName="AsdkPolyCAD_MGD"
-                  AppType="Dependency"
-                  ModuleName="./Contents/asdkmgPoly.dll"
-                  AppDescription="Managed wrapper"
-                  LoadOnAutoCADStartup="False"/>
+            AppName="AsdkPolyCAD_MGD"
+            AppType="Dependency"
+            ModuleName="./Contents/asdkmgPoly.dll"
+            AppDescription="Managed wrapper"
+            LoadOnAutoCADStartup="False"/>
         <ComponentEntry
             AppName="MyCustomPackage"
             ModuleName="./Contents/RxApp.dll"
             AppDescription="AutoCAD.IO .net test app"
             LoadOnCommandInvocation="True"
-            LoadOnAutoCADStartup="False"
-            >
+            LoadOnAutoCADStartup="False">
             <Commands GroupName="MyTestCommands">
                 <Command Global="TEST" Local="TEST" />
                 <Command Global="TEST" Local="TESTPOLY" />
