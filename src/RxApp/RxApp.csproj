@@ -78,9 +78,9 @@
       <HintPath>..\packages\AutoCAD.NET.Model.21.0.0\lib\45\AcDbMgdBrep.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="asdkmgPoly, Version=1.0.6136.17979, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="asdkmgPoly, Version=1.0.6136.29765, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\bin\Debug\asdkmgPoly.dll</HintPath>
+      <HintPath>..\polysamp\asdkmgPoly.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
