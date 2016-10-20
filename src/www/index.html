@@ -60,6 +60,18 @@
                     var data = new Int8Array(e.target.result);
                     invokeWorkItem(data, file.name);
                     activityname = name;
+                    // Upload the file
+                    //
+                    displayMessage("Uploading...");
+                    displayReport(null);
+                    uploadFile(file.name, data, function (status, location) {
+                        if (status) {
+                            invokeWorkItem(location);
+                        } else {
+                            displayMessage("Error uploading the drawing file");
+                        }
+                    });
+
                 };
             })(file);
 
@@ -113,59 +125,48 @@
             });
         }
 
-        // The function uploads the file to the storage, and submits the custom 
-        // workitem. The content is the location of the file, and the activityname
-        // If the workitem is successfully submitted, then the workitem status is 
-        // queried. If the workitem has been successfully processed, it calls 
-        // the function to process the output of the workitem. 
+        // The submits the custom workitem. The content is the location of the file, 
+        // and the activityname. If the workitem is successfully submitted, then the 
+        // workitem status is queried. If the workitem has been successfully processed, 
+        // it calls the function to process the output of the workitem. 
         // The workitem report is displayed on success or on failure.
         //
-        function invokeWorkItem(data, filename) {
+        function invokeWorkItem(location) {
 
-            displayMessage("Uploading...");
-            displayReport(null);
+            // Pass the uploaded location and the activityname in the content
+            var payload = {
+                "dwglocation": location,
+                "activityname": activityname
+            }
 
-            // Upload the file
-            uploadFile(filename, data, function (status, location) {
+            displayMessage("Processing...");
+            var url = submitworkitemurl;
+            sendRequest(url, "POST", "application/json", JSON.stringify(payload), function (status, response) {
                 if (status) {
-                    // Pass the uploaded location and the activityname in the content
-                    var payload = {
-                        "dwglocation": location,
-                        "activityname": activityname
-                    }
-
-                    displayMessage("Processing...");
-                    var url = submitworkitemurl;
-                    sendRequest(url, "POST", "application/json", JSON.stringify(payload), function (status, response) {
-                        if (status) {
-                            var resp = JSON.parse(response);
-                            if (resp && resp.Result) {
-                                // Get the workitem status on successfully submitting the workitem.
-                                var workitemId = resp.Result;
-                                getWorkItemStatus(workitemId, function (status, workitemResult) {
-                                    if (status) {
-                                        // Process the output from the workitem on success
-                                        processResult(workitemResult.Result.Output);
-                                        // Display the workitem report
-                                        displayReport(workitemResult.Result.Report);
-                                    } else {
-                                        // On error, display the workitem report if available
-                                        displayMessage("Error processing the workitem");
-                                        if (workitemResult && workitemResult.Result.Report) {
-                                            displayReport(workitemResult.Result.Report);
-                                        }
-                                        displayMessage(errorReport);
-                                    }
-                                });
+                    var resp = JSON.parse(response);
+                    if (resp && resp.Result) {
+                        // Get the workitem status on successfully submitting the workitem.
+                        var workitemId = resp.Result;
+                        getWorkItemStatus(workitemId, function (status, workitemResult) {
+                            if (status) {
+                                // Process the output from the workitem on success
+                                processResult(workitemResult.Result.Output);
+                                // Display the workitem report
+                                displayReport(workitemResult.Result.Report);
                             } else {
-                                displayMessage("Error submitting the workitem");
+                                // On error, display the workitem report if available
+                                displayMessage("Error processing the workitem");
+                                if (workitemResult && workitemResult.Result.Report) {
+                                    displayReport(workitemResult.Result.Report);
+                                }
+                                displayMessage(errorReport);
                             }
-                        } else {
-                            displayMessage("Error submitting the workitem");
-                        }
-                    });
+                        });
+                    } else {
+                        displayMessage("Error submitting the workitem");
+                    }
                 } else {
-                    displayMessage("Error uploading the drawing file");
+                    displayMessage("Error submitting the workitem");
                 }
             });
         }
@@ -256,6 +257,12 @@
             document.getElementById("alert").innerHTML = message;
         }
 
+        function customobjectButtonClicked() {
+            var location = "https://s3-us-west-2.amazonaws.com/aces-viewersample/custom/custom.dwg";
+            activityname = "MyPublishActivityCustom";
+            invokeWorkItem(location);
+        }
+
         // The function launches the viewer to display the model. The location 
         // of SVF/F2D and the xdata is passed as query parameters.
         //
@@ -291,6 +298,16 @@
     </div>
     <div>
         <input type="file" id="file2d" name="file" accept=".dwg, Drawing" />
+        <br />
+        <br />
+    </div>
+    <div>
+        <br />
+        <br />
+        Create/View CustomObject
+    </div>
+    <div>
+        <button type="button" id="customobjectbutton" onclick="customobjectButtonClicked()">CreateCustom</button>
         <br />
         <br />
     </div>

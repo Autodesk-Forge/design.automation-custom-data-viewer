@@ -26,8 +26,10 @@ namespace ClientApp
         static readonly string zip = "package.zip";
         static readonly string ActivityName2d = "MyPublishActivity2d";
         static readonly string ActivityName3d = "MyPublishActivity3d";
+        static readonly string ActivityNameCustom = "MyPublishActivityCustom";
         static readonly string Script2d = "_test ./result/xdata.json\r\n_prepareforpropertyextraction index.json\r\n_indexextractor index.json\r\n_publishtof2d ./output\r\n_createbubblepackage ./output ./result \r\n\n";
         static readonly string Script3d = "_test ./result/xdata.json\r\n_prepareforpropertyextraction index.json\r\n_indexextractor index.json\r\n_publishtosvf ./output/result.svf\r\n_createbubblepackage ./output ./result \r\n\n";
+        static readonly string ScriptCustom = "_testpoly\r\n_save \r\n_test ./result/xdata.json\r\n_prepareforpropertyextraction index.json\r\n_indexextractor index.json\r\n_publishtof2d ./output\r\n_createbubblepackage ./output ./result \r\n\n";
 
         static readonly string RequiredEngineVersion = "21.0";
 
@@ -74,6 +76,13 @@ namespace ClientApp
             if (activity == null)
             {
                 Console.WriteLine("Error creating custom activity: " + ActivityName3d);
+                return 1;
+            }
+
+            activity = CreateActivity(ActivityNameCustom, ScriptCustom, container);
+            if (activity == null)
+            {
+                Console.WriteLine("Error creating custom activity: " + ActivityNameCustom);
                 return 1;
             }
 

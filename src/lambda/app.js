@@ -62,22 +62,25 @@ module.exports.submitworkitem = (event, context, callback) => {
         return;
     }
 
-    var key = event.dwglocation;
-    var strtoken = "amazonaws.com/";
-    key = key.substring(key.indexOf(strtoken) + strtoken.length);
-    key = key.substring(0, key.indexOf("?"));
-    if (!key) {
-        callback("Invalid pre-signed url");
-        return;
+    var url = event.dwglocation;
+    if (url.indexOf("?") != -1) {
+        var key = event.dwglocation;
+        var strtoken = "amazonaws.com/";
+        key = key.substring(key.indexOf(strtoken) + strtoken.length);
+        key = key.substring(0, key.indexOf("?"));
+        if (!key) {
+            callback("Invalid pre-signed url");
+            return;
+        }
+
+        key = decodeURIComponent(key);
+
+        // Create a presigned url for GET that needs to be passed to DesignAutomation API
+        //
+        var s3 = new AWS.S3({ accessKeyId: config.aws_key, secretAccessKey: config.aws_secret });
+        var params = { Bucket: config.aws_s3_bucket, Key: key };
+        url = s3.getSignedUrl('getObject', params);
     }
-
-    key = decodeURIComponent(key);
-
-    // Create a presigned url for GET that needs to be passed to DesignAutomation API
-    //
-    var s3 = new AWS.S3({ accessKeyId: config.aws_key, secretAccessKey: config.aws_secret });
-    var params = { Bucket: config.aws_s3_bucket, Key: key };
-    var url = s3.getSignedUrl('getObject', params);
 
     if (!url) {
         context.callbackWaitsForEmptyEventLoop = false;
