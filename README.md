@@ -1,4 +1,4 @@
-# IOViewerSample
+# DWG Custom Data Viewer
 The sample code shows the combined usage of DesignAutomation API (https://developer.autodesk.com/en/docs/design-automation/v2) and the Viewer API (https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample application (http://viewersample.autocad.io/). The sample displays the usage of custom objects, object enablers using DesignAutomation API.
 
 ## Pre-requisites
