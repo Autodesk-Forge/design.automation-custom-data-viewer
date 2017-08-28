@@ -1,11 +1,11 @@
 # DWG Custom Data Viewer
-The sample code shows the combined usage of DesignAutomation API (https://developer.autodesk.com/en/docs/design-automation/v2) and the Viewer API (https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample application (http://viewersample.autocad.io/). The sample displays the usage of custom objects, object enablers using DesignAutomation API.
+The sample code shows the combined usage of [DesignAutomation API](https://developer.autodesk.com/en/docs/design-automation/v2) and [the Viewer API](https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample [application](http://viewersample.autocad.io/). The sample displays the usage of custom objects, object enablers using DesignAutomation API.
 
 ## Pre-requisites
-1. Visual Studio 2015 (https://msdn.microsoft.com/en-us/default.aspx)
-2. Nodejs (https://nodejs.org/en/download/)
-3. Amazon Web Service access key and secret (https://aws.amazon.com/).
-4. Autodesk Developer access key and secret (https://developer.autodesk.com/).
+1. [Visual Studio 2015](https://msdn.microsoft.com/en-us/default.aspx)
+2. [Nodejs](https://nodejs.org/en/download/)
+3. [Amazon Web Service access key and secret](https://aws.amazon.com/).
+4. [Autodesk Developer access key and secret](https://developer.autodesk.com/).
 
 
 ## Setup
@@ -32,12 +32,12 @@ The sample code shows the combined usage of DesignAutomation API (https://develo
 
 The sample app has essentially three parts
 
-##1. ARX Application
+## 1. ARX Application
 The ARX application is written in .NET, it has a command called ‘TEST’. The TEST command extracts any XData associated with the entities to a JSON file. 
 There is also another command called ‘TESTPOLY’ that creates the polysamp custom object. The ARX along with the object enablers and managed wrappers for polysamp custom object is uploaded as part of a custom package using the DesignAutomation API, and run as part of a custom activity. The object enablers and the respective managed wrappers for the polysamp custom object have been pre-built. Please refer to the ObjectARX sdk for the source code.
 
 
-##2. AWS Lambdas
+## 2. AWS Lambdas
 The backend processing is implemented using server less paradigm using AWS lambdas. The lambdas are exposed to the client webpage using the AWS API gateway.
 
 There are four lambda functions implemented.
@@ -53,38 +53,38 @@ The function takes the workitem identifier as the input, and checks the status o
 - ProcessResult
 The function takes the location of the result posted by DesignAutomation API for the workitem that was submitted. The result which is a compressed file containing the output is uncompressed by the function and uploaded to a unique location on S3. The location of the SVF/F2D and the XData files are returned.
 
-##3. Client Webpage
+## 3. Client Webpage
 The webpage has JavaScript functionality to invoke the API exposed by the lambdas. The local drawing selected by the user is uploaded using the AWS API gateway, and the workitem referencing the uploaded drawing is submitted. The Viewer API is used to show the resultant SVF/F2D file that was processed. Selecting the object in the Viewer will display any XData associated with the object in a properties panel, implemented using the Viewer API.
 
 
-##Workflow:
-
-![Workflow of the sample](http://g.gravizo.com/g?
-@startuml;
-actor "Browser" as ua;
-participant "UploadLocation lambda" as uploader;
-participant "SubmitWorkItem lambda" as submitter;
-participant "WorkitemStatus lambda" as statuschecker;
-participant "ProcessResult lambda" as resultprocessor;
-participant s3;
-participant "Forge Design Automation" as acadio;
-ua -> uploader: Get presigned url upload;
-uploader -> ua: presigned url for S3;
-ua -> s3 : upload dwg file;
-ua -> submitter : request work;
-submitter -> acadio : check apppackage;
-submitter -> acadio : check activitiy;
+### Workflow:
+![README@63-84](http://www.plantuml.com/plantuml/svg/XPFBJiCm44NtaV8Fe-vPTHSaL1028R50L8Zrr9u6AmyRpvYAlyTnt92cHUmYttElv-5iMD1BwDgoG2NMm-hEsmEJNm4o12mB5tMZZCDUOFNcMelwsIeKOtjeiTjf7D6aa5yOjc7N6NctldaIwkO6JegSEGRMH7OhA85F7Eb4VP1gpbmltYfYVYKEhSnDFfsuKROB6wyNCG_MrmJtnARkuJQ8xLAZAGaLQcFB8Y1StKpzLl180iud2sa8lirQ93EJUAmMr3vEUxi-vl4Qgcm4VQXXRrgQjEEe8kBfCn0B7EAOok9NYTXOO6JIY02TSwWQhEaVJedvCcA-_yASpVSDQxbUKB72AebJbNegUxwlwRfZK9PZt0aslxWcESUpUY6VWngMV24n5Jd9OtMBXp7qENvd9O8RwdNyDNu0 "README@63-84")
+<!--Plant UML code for Line Diagram -->
+<!-- @startuml
+actor "Browser" as ua
+participant "UploadLocation lambda" as uploader
+participant "SubmitWorkItem lambda" as submitter
+participant "WorkitemStatus lambda" as statuschecker
+participant "ProcessResult lambda" as resultprocessor
+participant s3
+participant "Forge Design Automation" as acadio
+ua -> uploader: Get presigned url upload
+uploader -> ua: presigned url for S3
+ua -> s3 : upload dwg file
+ua -> submitter : request work
+submitter -> acadio : check apppackage
+submitter -> acadio : check activitiy
 submitter -> acadio : post workitem;
-submitter -> ua : work submitted;
-ua -> statuschecker : check workitem status;
-statuschecker -> acadio : get workitem status;
-acadio -> statuschecker : success;
-statuschecker -> ua : success;
-ua -> resultprocessor : process results;
-@enduml
-)
+submitter -> ua : work submitted
+ua -> statuschecker : check workitem status
+statuschecker -> acadio : get workitem status
+acadio -> statuschecker : success
+statuschecker -> ua : success
+ua -> resultprocessor : process results
+@enduml -->
 
-###Workflow1:
+
+## Workflow1:
 1.	The drawing is selected in the webpage.
 2.	A pre-signed url is obtained from the UploadLocation lambda using the AWS gateway API for uploading the drawing, and it is uploaded.
 3.	The SubmitWorkItem lambda is invoked passing the location of the uploaded drawing, and the activity name.
@@ -97,7 +97,7 @@ ua -> resultprocessor : process results;
 10.	The SVF/F2D files are displayed using the Viewer API in the Window. The Viewer API is used to implement the extension to display the XData of the object.
 11.	When an object is selected, the XData information is searched if the object has any associated XData using the object handle. If it has, then the values are displayed in a properties panel created using the Viewer API.
 
-###Workflow2:
+### Workflow2:
 1.	Create custom object is selected in the Webpage.
 2.	The SubmitWorkItem lambda is invoked passing the location of the empty drawing.
 3.	The workitem referencing the custom activity to create the custom object is submitted.
