@@ -1,4 +1,8 @@
 # DWG Custom Data Viewer
+
+[![Design Automation](https://img.shields.io/badge/Design%20Automation-v2-green.svg)](http://developer.autodesk.com/)
+[![Viewer](https://img.shields.io/badge/Viewer-v2.14-green.svg)](http://developer.autodesk.com/)
+
 The sample code shows the combined usage of [DesignAutomation API](https://developer.autodesk.com/en/docs/design-automation/v2) and [the Viewer API](https://developer.autodesk.com/en/docs/viewer/v2/overview/) in a sample [application](http://viewersample.autocad.io/). The sample displays the usage of custom objects, object enablers using DesignAutomation API.
 
 ## Pre-requisites
