@@ -62,7 +62,7 @@ The webpage has JavaScript functionality to invoke the API exposed by the lambda
 
 
 ### Workflow:
-![README@63-84](http://www.plantuml.com/plantuml/svg/XPFBJiCm44NtaV8Fe-vPTHSaL1028R50L8Zrr9u6AmyRpvYAlyTnt92cHUmYttElv-5iMD1BwDgoG2NMm-hEsmEJNm4o12mB5tMZZCDUOFNcMelwsIeKOtjeiTjf7D6aa5yOjc7N6NctldaIwkO6JegSEGRMH7OhA85F7Eb4VP1gpbmltYfYVYKEhSnDFfsuKROB6wyNCG_MrmJtnARkuJQ8xLAZAGaLQcFB8Y1StKpzLl180iud2sa8lirQ93EJUAmMr3vEUxi-vl4Qgcm4VQXXRrgQjEEe8kBfCn0B7EAOok9NYTXOO6JIY02TSwWQhEaVJedvCcA-_yASpVSDQxbUKB72AebJbNegUxwlwRfZK9PZt0aslxWcESUpUY6VWngMV24n5Jd9OtMBXp7qENvd9O8RwdNyDNu0 "README@63-84")
+![thumbnail](http://www.plantuml.com/plantuml/svg/XPFBJiCm44NtaV8Fe-vPTHSaL1028R50L8Zrr9u6AmyRpvYAlyTnt92cHUmYttElv-5iMD1BwDgoG2NMm-hEsmEJNm4o12mB5tMZZCDUOFNcMelwsIeKOtjeiTjf7D6aa5yOjc7N6NctldaIwkO6JegSEGRMH7OhA85F7Eb4VP1gpbmltYfYVYKEhSnDFfsuKROB6wyNCG_MrmJtnARkuJQ8xLAZAGaLQcFB8Y1StKpzLl180iud2sa8lirQ93EJUAmMr3vEUxi-vl4Qgcm4VQXXRrgQjEEe8kBfCn0B7EAOok9NYTXOO6JIY02TSwWQhEaVJedvCcA-_yASpVSDQxbUKB72AebJbNegUxwlwRfZK9PZt0aslxWcESUpUY6VWngMV24n5Jd9OtMBXp7qENvd9O8RwdNyDNu0 "README@63-84")
 <!--Plant UML code for Line Diagram -->
 <!-- @startuml
 actor "Browser" as ua
