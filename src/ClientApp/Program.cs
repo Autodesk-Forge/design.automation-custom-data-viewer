@@ -31,7 +31,7 @@ namespace ClientApp
         static readonly string Script3d = "_test ./result/xdata.json\r\n_prepareforpropertyextraction index.json\r\n_indexextractor index.json\r\n_publishtosvf ./output/result.svf\r\n_createbubblepackage ./output ./result \r\n\n";
         static readonly string ScriptCustom = "_testpoly\r\n_save \r\n_test ./result/xdata.json\r\n_prepareforpropertyextraction index.json\r\n_indexextractor index.json\r\n_publishtof2d ./output\r\n_createbubblepackage ./output ./result \r\n\n";
 
-        static readonly string RequiredEngineVersion = "22.0";
+        static readonly string RequiredEngineVersion = "21.0";
 
         static int Main(string[] args)
         {
@@ -226,7 +226,7 @@ namespace ClientApp
                 RequiredEngineVersion = RequiredEngineVersion
             };
             activity.AppPackages.Add(PackageName); 
-            activity.AppPackages.Add("Publish2View22"); // reference the custom AppPackage
+            activity.AppPackages.Add("Publish2View21"); // reference the custom AppPackage
             container.AddToActivities(activity);
             container.SaveChanges();
             return activity;
