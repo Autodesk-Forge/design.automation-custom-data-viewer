@@ -1,4 +1,4 @@
-# DWG Custom Data Viewer
+# DWG Custom Data Viewer Home Automation Project 
 
 [![Design Automation](https://img.shields.io/badge/Design%20Automation-v2-green.svg)](http://developer.autodesk.com/)
 [![Viewer](https://img.shields.io/badge/Viewer-v2.14-green.svg)](http://developer.autodesk.com/)
